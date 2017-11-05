@@ -1,0 +1,6 @@
+{
+  "brokers": [
+    "localhost:9092"
+  ],
+  "topic": "xadf.compute.documents"
+}
