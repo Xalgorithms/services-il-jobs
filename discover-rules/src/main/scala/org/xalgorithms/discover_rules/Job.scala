@@ -4,6 +4,7 @@ import kafka.serializer.StringDecoder
 import utils.SparkUtils._
 import org.apache.spark.streaming.kafka.KafkaUtils
 import org.apache.spark.streaming.{Seconds, StreamingContext}
+import com.datastax.spark.connector.streaming._
 
 object Job {
   def main(args: Array[String]) {
@@ -17,11 +18,11 @@ object Job {
       "auto.offset.reset" -> "largest"
     )
 
-    val kafkaStream = KafkaUtils.createDirectStream[String, String, StringDecoder, StringDecoder](
+    val ids = KafkaUtils.createDirectStream[String, String, StringDecoder, StringDecoder](
       ssc, kafkaParams, Set(Settings.topic)
-    ).map(_._2)
+    ).map(_._2).map(id => { Tuple1(id) })
 
-    kafkaStream.print()
+    ids.joinWithCassandraTable("xadf", "invoices").print()
 
     ssc.start()
     ssc.awaitTermination()
