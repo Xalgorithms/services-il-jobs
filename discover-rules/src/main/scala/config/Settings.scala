@@ -7,4 +7,5 @@ object Settings {
 
   lazy val brokers = String.join(";", config.getStringList("brokers"))
   lazy val topic =  config.getString("topic")
+  lazy val cassandra_host =  config.getString("cassandra_host")
 }

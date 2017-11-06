@@ -2,6 +2,7 @@ package utils
 
 import java.lang.management.ManagementFactory
 
+import config.Settings
 import org.apache.spark.{SparkConf, SparkContext}
 
 
@@ -12,6 +13,7 @@ object SparkUtils {
   def getSparkContext(appName: String) = {
     val conf = new SparkConf()
         .setAppName(appName)
+        .set("spark.cassandra.connection.host", Settings.cassandra_host)
 
     if (isIDE) {
       conf.setMaster("local[*]")
