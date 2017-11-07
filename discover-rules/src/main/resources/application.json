@@ -2,6 +2,7 @@
   "brokers": [
     "localhost:9092"
   ],
-  "topic": "xadf.compute.documents",
+  "receiver_topic": "xadf.compute.documents",
+  "producer_topic": "xadf.compute.applications",
   "cassandra_host": "localhost"
 }
