@@ -1,4 +1,4 @@
-name := "discover-rules"
+name := "apply-rule"
 
 version := "0.1"
 
@@ -13,4 +13,3 @@ libraryDependencies += "com.typesafe" % "config" % "1.3.1"
 libraryDependencies += "com.datastax.spark" %% "spark-cassandra-connector" % "2.0.3"
 
 libraryDependencies += "org.apache.spark" % "spark-sql_2.11" % "2.2.0"
-        

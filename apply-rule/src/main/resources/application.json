@@ -1,0 +1,8 @@
+{
+  "brokers": [
+    "localhost:9092"
+  ],
+  "receiver_topic": "xadf.compute.items",
+  "producer_topic": "xadf.result.items",
+  "cassandra_host": "localhost"
+}
