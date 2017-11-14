@@ -1,4 +1,4 @@
-package org.xalgorithms.discover_rules;
+package org.xalgorithms.discover_rules
 
 import config.Settings
 import kafka.serializer.StringDecoder
@@ -30,6 +30,27 @@ object Job {
     traverse(next.get, path.drop(1), value)
   }
 
+  def filter_items(tuple: (CassandraRow, CassandraRow)): Boolean = {
+    val filters = tuple._2.get[Option[UDTValue]]("filters")
+
+    // Make sure filters is defined
+    if (filters.isEmpty) {
+      return true
+    }
+    val envelope = filters.get.get[Option[Set[UDTValue]]]("envelope")
+
+    // Make sure envelope filters are defined
+    if (envelope.isEmpty) {
+      return true
+    }
+
+    val path = envelope.get.head.getString("path")
+    val value = envelope.get.head.getString("value")
+    val path_steps = path.split("\\.")
+
+    traverse(tuple._1.getUDTValue(path_steps.head), path_steps.drop(1), value)
+  }
+
   def main(args: Array[String]) {
     val sc = getSparkContext("DiscoverRulesJob")
     val batchDuration = Seconds(4)
@@ -55,31 +76,14 @@ object Job {
       rdd.cartesian(rules)
     }).transform({rdd =>
       rdd.filter({tuple =>
-        val filters = tuple._2.get[Option[UDTValue]]("filters")
-
-        filters.isDefined
-      }).filter({tuple =>
-        val filters = tuple._2.getUDTValue("filters")
-        val envelope = filters.get[Option[Set[UDTValue]]]("envelope")
-
-        envelope.isDefined
-      }).filter({tuple =>
-        val filters = tuple._2.getUDTValue("filters")
-        val envelope = filters.get[List[UDTValue]]("envelope")
-
-        val path = envelope.head.getString("path")
-        val value = envelope.head.getString("value")
-
-        val path_steps = path.split("\\.")
-
-        traverse(tuple._1.getUDTValue(path_steps.head), path_steps.drop(1), value)
+        filter_items(tuple)
       })
     })
-      .foreachRDD { rdd =>
-        rdd.foreach { t =>
-          kafkaSink.value.send(Settings.producer_topic, t._1.getString("id") + ":" + t._2.getString("id"))
-        }
+    .foreachRDD { rdd =>
+      rdd.foreach { t =>
+        kafkaSink.value.send(Settings.producer_topic, t._1.getString("id") + ":" + t._2.getString("id"))
       }
+    }
 
     ssc.start()
     ssc.awaitTermination()
