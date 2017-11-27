@@ -7,8 +7,21 @@ import org.apache.spark.streaming.kafka.KafkaUtils
 import org.apache.spark.streaming.{Seconds, StreamingContext}
 import kafka.serializer.StringDecoder
 import com.datastax.spark.connector._
-import spray.json._
-import DefaultJsonProtocol._
+import org.apache.commons.lang3.reflect.FieldUtils
+import org.json4s.NoTypeHints
+import org.json4s.native.Serialization
+import org.json4s.native.Serialization.{write}
+
+
+trait BaseUDT
+
+case class Amount(value: BigDecimal, currency_code: String) extends BaseUDT
+case class Measure(value: BigDecimal, unit: String) extends BaseUDT
+case class Pricing(orderable_factor: BigDecimal, price: Option[Amount], quantity: Measure) extends BaseUDT
+case class TaxComponent(amount: Amount, taxable: Amount) extends BaseUDT
+case class ItemTax(total: Amount, components: List[TaxComponent]) extends BaseUDT
+case class Item(id: String, price: Option[Amount], quantity: Measure, pricing: Pricing, tax: String) extends BaseUDT
+case class Invoice(items: List[Item]) extends BaseUDT
 
 
 object Job {
@@ -21,26 +34,43 @@ object Job {
     case "greater_than_equal" => x >= y
   }
 
-  def traverse(source: UDTValue, path: Array[String], value: String, operator: String): Boolean = {
+  def traverse(source: BaseUDT, path: Array[String], value: String, operator: String): Boolean = {
     val p = path.head
 
-    if (!source.columnNames.contains(p)) {
+    if (!containsField(source, p)) {
       return true
     }
 
     if (path.length == 1) {
-      return applyOperator(source.getString(p), value, operator)
+      return applyOperator(getStringField(source, p), value, operator)
     }
 
-    val next = source.get[Option[UDTValue]](p)
-    if (next.isEmpty) {
+    val next = getField(source, p)
+    if (next == null) {
       return true
     }
 
-    traverse(next.get, path.drop(1), value, operator)
+    traverse(next, path.drop(1), value, operator)
   }
 
-  def filter_items(tuple: ((String, UDTValue), (String, CassandraRow))): Boolean = {
+  def containsField(o: BaseUDT, field: String): Boolean = {
+    try {
+      FieldUtils.getField(o.getClass, field) != null
+    }
+    catch {
+      case _: Exception=> false
+    }
+  }
+
+  def getStringField(o: BaseUDT, field: String): String = {
+    FieldUtils.readDeclaredField(o, field).asInstanceOf[String]
+  }
+
+  def getField(o: BaseUDT, field: String): BaseUDT = {
+    FieldUtils.readDeclaredField(o, field).asInstanceOf[BaseUDT]
+  }
+
+  def filter_items(tuple: ((String, Item), (String, CassandraRow))): Boolean = {
     val filters = tuple._2._2.get[Option[UDTValue]]("filters")
 
     // Make sure filters is defined
@@ -81,6 +111,7 @@ object Job {
       ssc, kafkaReceiverParams, Set(Settings.receiver_topic)
     )
     .map(_._2)
+
     .transform({rdd =>
       val documentRDD = rdd.map({id_pair =>
         val document_id = id_pair.split(":")(0)
@@ -93,14 +124,15 @@ object Job {
       })
 
       // Join with table and unwrap id
-      val items = documentRDD.joinWithCassandraTable("xadf", "invoices").select("items").map({i =>
+      val items = documentRDD.joinWithCassandraTable[Invoice]("xadf", "invoices").select("items").map({i =>
         (i._1._1, i._2)
       })
       val rules = ruleRDD.joinWithCassandraTable("xadf", "rules").select("filters").map({r =>
         (r._1._1, r._2)
       })
+
       val expandedItems = items.flatMap({r =>
-        val itms = r._2.get[List[UDTValue]]("items")
+        val itms = r._2.items
         itms.map({i =>
           (r._1, i)
         })
@@ -109,7 +141,6 @@ object Job {
       // Example: ((document_id, {item}),(rule_id,CassandraRow{filters: {item: []}))
       expandedItems.cartesian(rules)
     })
-
     .filter({tuple =>
       filter_items(tuple)
     }).map({tuple =>
@@ -128,12 +159,14 @@ object Job {
       rdd.foreach({item =>
         val Array(document_id, rule_id) = item._1.split(":")
         val res = Map(
-          "document_id" -> document_id,
+          "id" -> document_id,
           "rule_id" -> rule_id,
-          "items" -> item._2.map(_.toString()).toJson.compactPrint
+          "items" -> item._2
         )
-        println(res.toJson.compactPrint)
-        kafkaSink.value.send(Settings.producer_topic, res.toJson.compactPrint)
+        implicit val formats = Serialization.formats(NoTypeHints)
+
+        val jsonStr = write(res)
+        kafkaSink.value.send(Settings.producer_topic, jsonStr)
       })
     })
 

@@ -12,10 +12,10 @@ import spray.json.DefaultJsonProtocol
 
 case class Amount(value: BigDecimal, currency_code: String)
 case class Measure(value: BigDecimal, unit: String)
-case class Pricing(orderable_factor: BigDecimal, price: Amount, quantity: Measure)
+case class Pricing(orderable_factor: BigDecimal, price: Option[Amount], quantity: Measure)
 case class TaxComponent(amount: Amount, taxable: Amount)
 case class ItemTax(total: Amount, components: List[TaxComponent])
-case class Item(id: String, price: Amount, quantity: Measure, pricing: Pricing, tax: String)
+case class Item(id: String, price: Option[Amount], quantity: Measure, pricing: Pricing, tax: String)
 case class Revision(id: String, items: List[Item])
 
 object MyJsonProtocol extends DefaultJsonProtocol {
