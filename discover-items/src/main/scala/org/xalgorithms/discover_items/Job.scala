@@ -10,19 +10,8 @@ import com.datastax.spark.connector._
 import org.apache.commons.lang3.reflect.FieldUtils
 import org.json4s.NoTypeHints
 import org.json4s.native.Serialization
-import org.json4s.native.Serialization.{write}
-
-
-trait BaseUDT
-
-case class Amount(value: BigDecimal, currency_code: String) extends BaseUDT
-case class Measure(value: BigDecimal, unit: String) extends BaseUDT
-case class Pricing(orderable_factor: BigDecimal, price: Option[Amount], quantity: Measure) extends BaseUDT
-case class TaxComponent(amount: Amount, taxable: Amount) extends BaseUDT
-case class ItemTax(total: Amount, components: List[TaxComponent]) extends BaseUDT
-case class Item(id: String, price: Option[Amount], quantity: Measure, pricing: Pricing, tax: String) extends BaseUDT
-case class Invoice(items: List[Item]) extends BaseUDT
-
+import org.json4s.native.Serialization.write
+import org.xalgorithms.discover_items.udt._
 
 object Job {
   def applyOperator(x: String, y: String, operator: String): Boolean = operator match {
@@ -154,7 +143,6 @@ object Job {
       accum ++ value
     })
     // At this point each item is ("document_id:rule_id", List(all items of the document))
-    // TODO: Actually apply the rules
     .foreachRDD({rdd =>
       rdd.foreach({item =>
         val Array(document_id, rule_id) = item._1.split(":")
