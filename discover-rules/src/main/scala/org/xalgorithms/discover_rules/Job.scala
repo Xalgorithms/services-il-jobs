@@ -1,54 +1,78 @@
 package org.xalgorithms.discover_rules
 
+import java.util.TimeZone
+
+import com.arangodb.spark.ArangoSpark
+import com.arangodb.spark.ReadOptions
 import config.Settings
 import kafka.serializer.StringDecoder
 import utils.SparkUtils._
 import utils.KafkaSinkUtils._
 import org.apache.spark.streaming.kafka.KafkaUtils
 import org.apache.spark.streaming.{Seconds, StreamingContext}
-import com.datastax.spark.connector.streaming._
 import com.datastax.spark.connector._
+import org.xalgorithms.discover_rules.udt.Invoice
+import com.github.nscala_time.time.Imports._
 
 
 object Job {
-  def traverse(source: UDTValue, path: Array[String], value: String): Boolean = {
-    val p = path.head
+  def filter_items(tuple: (Invoice, CassandraRow)): Boolean = {
+    val envelope = tuple._1.envelope
+    val rule = tuple._2
+    val country = rule.get[String]("country")
+    val region = rule.get[String]("region")
+    val timezone = rule.get[String]("timezone")
+    val starts = rule.get[DateTime]("starts")
+    val ends = rule.get[DateTime]("ends")
+    val party = rule.get[String]("party")
 
-    if (!source.columnNames.contains(p)) {
-      return true
-    }
-
-    if (path.length == 1) {
-      return source.getString(p) == value
-    }
-
-    val next = source.get[Option[UDTValue]](p)
-    if (next.isEmpty) {
-      return true
-    }
-
-    traverse(next.get, path.drop(1), value)
+    return is_valid_country(envelope.country, country) &&
+        is_valid_region(envelope.region, region) &&
+        is_valid_party(envelope.party, party) &&
+        is_valid_start(envelope.period.starts.toDateTime, starts) &&
+        is_valid_end(envelope.period.ends.toDateTime, ends)
   }
 
-  def filter_items(tuple: (CassandraRow, CassandraRow)): Boolean = {
-    val filters = tuple._2.get[Option[UDTValue]]("filters")
+  def convertToTimezone(d: DateTime, tz: String): DateTime = {
+    // TODO: Fix this
+    val timezoneId = TimeZone.getTimeZone(tz).getID
 
-    // Make sure filters is defined
-    if (filters.isEmpty) {
+    d.withZone(DateTimeZone.forID(timezoneId))
+  }
+
+  def is_valid_start(envelope_start: DateTime, start: DateTime): Boolean = {
+    if (start == null) {
       return true
     }
-    val envelope = filters.get.get[Option[Set[UDTValue]]]("envelope")
+    return envelope_start.isAfter(start)
+  }
 
-    // Make sure envelope filters are defined
-    if (envelope.isEmpty) {
+  def is_valid_end(envelope_end: DateTime, end: DateTime): Boolean = {
+    if (end == null) {
       return true
     }
+    return envelope_end.isBefore(end)
+  }
 
-    val path = envelope.get.head.getString("path")
-    val value = envelope.get.head.getString("value")
-    val path_steps = path.split("\\.")
+  def is_valid_country(envelope_country: String, country: String): Boolean = {
+    if (country == null) {
+      return true
+    }
+    return envelope_country == country
+  }
 
-    traverse(tuple._1.getUDTValue(path_steps.head), path_steps.drop(1), value)
+  def is_valid_region(envelope_region: String, region: String): Boolean = {
+    if (region == null) {
+      return true
+    }
+    return envelope_region == region
+  }
+
+  def is_valid_party(envelope_party: String, party: String): Boolean = {
+    if (party == null) {
+      return true
+    }
+    return envelope_party == party
   }
 
   def main(args: Array[String]) {
@@ -65,25 +89,43 @@ object Job {
     val producerProps = composeProducerConfig(Settings.brokers)
     val kafkaSink = sc.broadcast(producerProps)
 
+
+    case class test_bean (_key: String){ def this() = this(_key = null) }
+
+    case class rule_bean (_key: String){ def this() = this(_key = null) }
+
     val ids = KafkaUtils.createDirectStream[String, String, StringDecoder, StringDecoder](
       ssc, kafkaReceiverParams, Set(Settings.receiver_topic)
-    ).map(_._2).map(Tuple1(_))
-
-
-
-    ids.joinWithCassandraTable("xadf", "invoices").map(_._2).transform({rdd =>
-      val rules = sc.cassandraTable("xadf", "rules")
-      rdd.cartesian(rules)
-    }).transform({rdd =>
-      rdd.filter({tuple =>
-        filter_items(tuple)
+    )
+      .map(_._2)
+      .map({id =>
+        "doc._key=='" + id + "'"
       })
-    })
-    .foreachRDD { rdd =>
-      rdd.foreach { t =>
-        kafkaSink.value.send(Settings.producer_topic, t._1.getString("id") + ":" + t._2.getString("id"))
+      .reduce({(criteria1, criteria2) =>
+        criteria1 + "||" + criteria2
+      })
+      .transform({rdd =>
+        val criteria = rdd.collect().mkString("")
+        if (criteria.isEmpty()) {
+          ArangoSpark.load[Invoice](sc, "invoices", ReadOptions("xadf"))
+        } else {
+          ArangoSpark.load[Invoice](sc, "invoices", ReadOptions("xadf")).filter(criteria)
+        }
+      })
+      .transform({rdd =>
+        val rules = sc.cassandraTable("xadf", "effective_rules")
+        rdd.cartesian(rules)
+      })
+      .transform({rdd =>
+        rdd.filter({tuple =>
+          filter_items(tuple)
+        })
+      })
+      .foreachRDD { rdd =>
+        rdd.foreach { t =>
+          kafkaSink.value.send(Settings.producer_topic, t._1._key + ":" + t._2.getString("id"))
+        }
       }
-    }
 
     ssc.start()
     ssc.awaitTermination()

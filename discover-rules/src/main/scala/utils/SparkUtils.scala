@@ -14,6 +14,9 @@ object SparkUtils {
     val conf = new SparkConf()
         .setAppName(appName)
         .set("spark.cassandra.connection.host", Settings.cassandra_host)
+        .set("arangodb.hosts", Settings.arango_host)
+        .set("arangodb.user", Settings.arango_username)
+        .set("arangodb.password", Settings.arango_password)
 
     if (isIDE) {
       conf.setMaster("local[*]")
