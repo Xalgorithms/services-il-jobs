@@ -13,4 +13,7 @@ libraryDependencies += "com.typesafe" % "config" % "1.3.1"
 libraryDependencies += "com.datastax.spark" %% "spark-cassandra-connector" % "2.0.3"
 
 libraryDependencies += "org.apache.spark" % "spark-sql_2.11" % "2.2.0"
-        
+
+libraryDependencies += "com.arangodb" % "arangodb-spark-connector" % "1.0.2"
+
+libraryDependencies += "com.github.nscala-time" %% "nscala-time" % "2.18.0"
