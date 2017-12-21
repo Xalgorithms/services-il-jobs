@@ -19,3 +19,5 @@ libraryDependencies += "io.spray" %%  "spray-json" % "1.3.3"
 libraryDependencies += "org.apache.commons" % "commons-lang3" % "3.0"
 
 libraryDependencies += "org.json4s" %% "json4s-native" % "3.3.0"
+
+libraryDependencies += "com.arangodb" % "arangodb-spark-connector" % "1.0.2"

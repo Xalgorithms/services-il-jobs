@@ -4,5 +4,8 @@
   ],
   "receiver_topic": "xadf.compute.applications",
   "producer_topic": "xadf.compute.items",
-  "cassandra_host": "localhost"
+  "cassandra_host": "localhost",
+  "arango_host": "127.0.0.1:8529",
+  "arango_username": "",
+  "arango_password": ""
 }

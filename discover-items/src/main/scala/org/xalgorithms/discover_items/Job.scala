@@ -1,5 +1,7 @@
 package org.xalgorithms.discover_items
 
+import com.arangodb.spark.rdd.ArangoRDD
+import com.arangodb.spark.{ArangoSpark, ReadOptions}
 import utils.SparkUtils._
 import utils.KafkaSinkUtils._
 import config.Settings
@@ -8,6 +10,7 @@ import org.apache.spark.streaming.{Seconds, StreamingContext}
 import kafka.serializer.StringDecoder
 import com.datastax.spark.connector._
 import org.apache.commons.lang3.reflect.FieldUtils
+import org.apache.spark.SparkContext
 import org.json4s.NoTypeHints
 import org.json4s.native.Serialization
 import org.json4s.native.Serialization.write
@@ -82,6 +85,14 @@ object Job {
     traverse(item, path_steps.drop(1), value, op)
   }
 
+  def get_invoices(criteria: String, sc: SparkContext): ArangoRDD[Invoice] = {
+    if (criteria.isEmpty()) {
+      ArangoSpark.load[Invoice](sc, "invoices", ReadOptions("xadf"))
+    } else {
+      ArangoSpark.load[Invoice](sc, "invoices", ReadOptions("xadf")).filter(criteria)
+    }
+  }
+
   def main(args: Array[String]) {
     val sc = getSparkContext("DiscoverRulesJob")
     val batchDuration = Seconds(4)
@@ -104,7 +115,7 @@ object Job {
     .transform({rdd =>
       val documentRDD = rdd.map({id_pair =>
         val document_id = id_pair.split(":")(0)
-        Tuple1(document_id)
+        document_id
       })
 
       val ruleRDD = rdd.map({id_pair =>
@@ -112,11 +123,19 @@ object Job {
         Tuple1(rule_id)
       })
 
-      // Join with table and unwrap id
-      val items = documentRDD.joinWithCassandraTable[Invoice]("xadf", "invoices").select("items").map({i =>
-        (i._1._1, i._2)
+      val criteriaArr = documentRDD
+        .map({id =>
+          "doc._key=='" + id + "'"
+        })
+
+      val criteria = criteriaArr.collect().mkString("||")
+      var invoices = get_invoices(criteria, sc)
+
+      val items = invoices.map({invoice =>
+        (invoice._key, invoice)
       })
-      val rules = ruleRDD.joinWithCassandraTable("xadf", "rules").select("filters").map({r =>
+      // Join with table and unwrap id
+      val rules = ruleRDD.joinWithCassandraTable("xadf", "effective_rules").map({r =>
         (r._1._1, r._2)
       })
 
@@ -132,7 +151,8 @@ object Job {
     })
     .filter({tuple =>
       filter_items(tuple)
-    }).map({tuple =>
+    })
+    .map({tuple =>
       val document_id = tuple._1._1
       val item = tuple._1._2
       val rule_id = tuple._2._1
