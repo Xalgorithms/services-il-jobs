@@ -3,11 +3,18 @@ package org.xalgorithms.discover_items
 object udt {
   sealed trait BaseUDT
 
-  case class Amount(value: BigDecimal, currency_code: String) extends BaseUDT
-  case class Measure(value: BigDecimal, unit: String) extends BaseUDT
-  case class Pricing(orderable_factor: BigDecimal, price: Option[Amount], quantity: Measure) extends BaseUDT
+  case class Amount(value: Integer, currency_code: String) extends BaseUDT
+  case class Measure(value: Integer, unit: String) extends BaseUDT
+  case class Pricing(orderable_factor: Integer, price: Option[Amount], quantity: Measure) extends BaseUDT
   case class TaxComponent(amount: Amount, taxable: Amount) extends BaseUDT
-  case class ItemTax(total: Amount, components: List[TaxComponent]) extends BaseUDT
+  case class ItemTax(total: Amount, components: Array[TaxComponent]) extends BaseUDT
   case class Item(id: String, price: Option[Amount], quantity: Measure, pricing: Pricing, tax: String) extends BaseUDT
-  case class Invoice(items: List[Item]) extends BaseUDT
+
+  case class Period(timezone: String, starts: String, ends: String) extends BaseUDT
+  case class Envelope(issued: String, country: String, region: String, party: String, period: Period) extends BaseUDT
+  case class Invoice(_id: String, items: Array[Item], envelope: Envelope) extends BaseUDT
+
+  case class WhenKeys(section: String, key: String)
+
+  case class InvoiceAndWhensKeys(section: String, key: String, document: Invoice) extends BaseUDT
 }

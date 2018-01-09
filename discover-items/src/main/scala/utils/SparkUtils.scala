@@ -14,6 +14,8 @@ object SparkUtils {
     val conf = new SparkConf()
         .setAppName(appName)
         .set("spark.cassandra.connection.host", Settings.cassandra_host)
+        .set("spark.mongodb.input.uri", Settings.mongo_host)
+        .set("spark.mongodb.output.uri", Settings.mongo_host)
 
     if (isIDE) {
       conf.setMaster("local[*]")

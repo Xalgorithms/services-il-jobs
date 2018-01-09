@@ -1,5 +1,6 @@
 package org.xalgorithms.discover_items
 
+import com.mongodb.spark.MongoSpark
 import utils.SparkUtils._
 import utils.KafkaSinkUtils._
 import config.Settings
@@ -7,11 +8,13 @@ import org.apache.spark.streaming.kafka.KafkaUtils
 import org.apache.spark.streaming.{Seconds, StreamingContext}
 import kafka.serializer.StringDecoder
 import com.datastax.spark.connector._
+import com.mongodb.spark.config.ReadConfig
 import org.apache.commons.lang3.reflect.FieldUtils
 import org.json4s.NoTypeHints
 import org.json4s.native.Serialization
 import org.json4s.native.Serialization.write
 import org.xalgorithms.discover_items.udt._
+
 
 object Job {
   def applyOperator(x: String, y: String, operator: String): Boolean = operator match {
@@ -21,6 +24,34 @@ object Job {
     case "less_than_equal" => x <= y
     case "greater_than" => x > y
     case "greater_than_equal" => x >= y
+  }
+
+  def section_exists(source: BaseUDT, section: String, path: String): Boolean = {
+    val parts = path.split("\\.")
+    if (!containsField(source, section)) {
+      return false
+    }
+    val data = getField(source, section)
+    path_exists(data, parts)
+  }
+
+  def path_exists(source: BaseUDT, path: Array[String]): Boolean = {
+    val p = path.head
+
+    if (!containsField(source, p)) {
+      return false
+    }
+
+    if (path.length == 1) {
+      return containsField(source, p)
+    }
+
+    val next = getField(source, p)
+    if (next == null) {
+      return false
+    }
+
+    path_exists(next, path.drop(1))
   }
 
   def traverse(source: BaseUDT, path: Array[String], value: String, operator: String): Boolean = {
@@ -44,7 +75,7 @@ object Job {
 
   def containsField(o: BaseUDT, field: String): Boolean = {
     try {
-      FieldUtils.getField(o.getClass, field) != null
+      FieldUtils.getField(o.getClass, field, true) != null
     }
     catch {
       case _: Exception=> false
@@ -56,7 +87,7 @@ object Job {
   }
 
   def getField(o: BaseUDT, field: String): BaseUDT = {
-    FieldUtils.readDeclaredField(o, field).asInstanceOf[BaseUDT]
+    FieldUtils.readDeclaredField(o, field, true).asInstanceOf[BaseUDT]
   }
 
   def filter_items(tuple: ((String, Item), (String, CassandraRow))): Boolean = {
@@ -82,7 +113,20 @@ object Job {
     traverse(item, path_steps.drop(1), value, op)
   }
 
+  def filter_all(tuple: (InvoiceAndWhensKeys, CassandraRow)): Boolean = {
+    val doc = tuple._1.document
+    val section = tuple._1.section
+    val key = tuple._1.key
+
+    val path_steps = key.split("\\.")
+    val op = tuple._2.getString("op")
+    val value = tuple._2.getString("val")
+
+    traverse(doc, path_steps, value, op)
+  }
+
   def main(args: Array[String]) {
+
     val sc = getSparkContext("DiscoverRulesJob")
     val batchDuration = Seconds(4)
     val ssc = new StreamingContext(sc, batchDuration)
@@ -96,67 +140,79 @@ object Job {
     val producerProps = composeProducerConfig(Settings.brokers)
     val kafkaSink = sc.broadcast(producerProps)
 
+    val readConfig = ReadConfig(Map("collection" -> "documents", "readPreference.name" -> "secondaryPreferred"), Some(ReadConfig(sc)))
+    val rd = MongoSpark.load[Invoice](sc, readConfig)
+
     KafkaUtils.createDirectStream[String, String, StringDecoder, StringDecoder](
       ssc, kafkaReceiverParams, Set(Settings.receiver_topic)
     )
-    .map(_._2)
-
-    .transform({rdd =>
-      val documentRDD = rdd.map({id_pair =>
-        val document_id = id_pair.split(":")(0)
-        Tuple1(document_id)
+      .map(_._2)
+      .map({id_pair =>
+        val parts = id_pair.split(":")
+        (parts(0), parts(1))
       })
 
-      val ruleRDD = rdd.map({id_pair =>
-        val rule_id = id_pair.split(":")(1)
-        Tuple1(rule_id)
+      .transform({rdd =>
+        val readConfig = ReadConfig(Map("collection" -> "documents", "readPreference.name" -> "secondaryPreferred"), Some(ReadConfig(sc)))
+
+        val count = rdd.count()
+
+        val tuples = rdd.take(count.toInt)
+
+        val res = tuples.map({ids =>
+          val document_id = ids._1
+          val rule_id = ids._2
+
+          val rd = MongoSpark.load(sc, readConfig)
+
+          val ds = rd.toDS[Invoice]()
+          ds.filter(doc => doc._id == document_id)
+
+          (ds.rdd.first(), rule_id)
+        })
+
+        sc.parallelize(res)
       })
 
-      // Join with table and unwrap id
-      val items = documentRDD.joinWithCassandraTable[Invoice]("xadf", "invoices").select("items").map({i =>
-        (i._1._1, i._2)
-      })
-      val rules = ruleRDD.joinWithCassandraTable("xadf", "rules").select("filters").map({r =>
-        (r._1._1, r._2)
-      })
 
-      val expandedItems = items.flatMap({r =>
-        val itms = r._2.items
-        itms.map({i =>
-          (r._1, i)
+      .transform({rdd =>
+        val when_keys = sc.cassandraTable[WhenKeys]("xadf", "when_keys")
+        val tuple = rdd.cartesian(when_keys)
+
+        tuple.filter({rdd =>
+          val paths = rdd._2
+          val section = paths.section
+          val key = paths.key
+
+          section_exists(rdd._1._1, section, key)
         })
       })
-
-      // Example: ((document_id, {item}),(rule_id,CassandraRow{filters: {item: []}))
-      expandedItems.cartesian(rules)
-    })
-    .filter({tuple =>
-      filter_items(tuple)
-    }).map({tuple =>
-      val document_id = tuple._1._1
-      val item = tuple._1._2
-      val rule_id = tuple._2._1
-      // Convert to a (key, list) tuple to be able to reduce items back together
-      (document_id + ":" + rule_id, List(item))
-    })
-    .reduceByKey({(accum, value) =>
-      accum ++ value
-    })
-    // At this point each item is ("document_id:rule_id", List(all items of the document))
-    .foreachRDD({rdd =>
-      rdd.foreach({item =>
-        val Array(document_id, rule_id) = item._1.split(":")
-        val res = Map(
-          "id" -> document_id,
-          "rule_id" -> rule_id,
-          "items" -> item._2
-        )
-        implicit val formats = Serialization.formats(NoTypeHints)
-
-        val jsonStr = write(res)
-        kafkaSink.value.send(Settings.producer_topic, jsonStr)
+      .map({d =>
+        InvoiceAndWhensKeys(d._2.section, d._2.key, d._1._1)
       })
-    })
+      .transform({rdd =>
+        rdd.joinWithCassandraTable("xadf", "whens")
+      })
+      .filter({tuple =>
+        filter_all(tuple)
+      })
+      .foreachRDD({rdd =>
+        rdd.foreach({it =>
+          val items = it._1.document.items
+          val rule_id = it._2.getString("rule_id")
+          val document_id = it._1.document._id
+
+          val res = Map(
+            "id" -> document_id,
+            "rule_id" -> rule_id,
+            "items" -> items
+          )
+          implicit val formats = Serialization.formats(NoTypeHints)
+
+          val jsonStr = write(res)
+          kafkaSink.value.send(Settings.producer_topic, jsonStr)
+        })
+      })
 
     ssc.start()
     ssc.awaitTermination()
