@@ -16,5 +16,5 @@ object udt {
 
   case class WhenKeys(section: String, key: String)
 
-  case class InvoiceAndWhensKeys(section: String, key: String, document: Invoice) extends BaseUDT
+  case class InvoiceAndWhensKeys(document: Invoice, section: String, key: String, rule_id: String, value: String) extends BaseUDT
 }

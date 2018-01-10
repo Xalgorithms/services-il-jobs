@@ -26,11 +26,41 @@ object Job {
     case "greater_than_equal" => x >= y
   }
 
-  def section_exists(source: BaseUDT, section: String, path: String): Boolean = {
+  def get_value_by_section_and_key(source: BaseUDT, section: String, path: String): String = {
+    if (!containsField(source, section)) {
+      return null
+    }
+    val data = getField(source, section)
     val parts = path.split("\\.")
+
+    get_value_by_key(data, parts)
+  }
+
+  def get_value_by_key(source: BaseUDT, path: Array[String]): String = {
+    val p = path.head
+
+    if (!containsField(source, p)) {
+      return null
+    }
+
+    if (path.length == 1) {
+      return getStringField(source, p)
+    }
+
+    val next = getField(source, p)
+    if (next == null) {
+      return null
+    }
+
+    get_value_by_key(next, path.drop(1))
+  }
+
+  def section_exists(source: BaseUDT, section: String, path: String): Boolean = {
     if (!containsField(source, section)) {
       return false
     }
+
+    val parts = path.split("\\.")
     val data = getField(source, section)
     path_exists(data, parts)
   }
@@ -83,7 +113,7 @@ object Job {
   }
 
   def getStringField(o: BaseUDT, field: String): String = {
-    FieldUtils.readDeclaredField(o, field).asInstanceOf[String]
+    FieldUtils.readDeclaredField(o, field, true).asInstanceOf[String]
   }
 
   def getField(o: BaseUDT, field: String): BaseUDT = {
@@ -152,6 +182,7 @@ object Job {
         (parts(0), parts(1))
       })
 
+      // Map document id to actual document
       .transform({rdd =>
         val readConfig = ReadConfig(Map("collection" -> "documents", "readPreference.name" -> "secondaryPreferred"), Some(ReadConfig(sc)))
 
@@ -174,38 +205,45 @@ object Job {
         sc.parallelize(res)
       })
 
-
+      // Get values by when_keys
       .transform({rdd =>
         val when_keys = sc.cassandraTable[WhenKeys]("xadf", "when_keys")
         val tuple = rdd.cartesian(when_keys)
 
-        tuple.filter({rdd =>
-          val paths = rdd._2
+        tuple.map({t =>
+          val paths = t._2
           val section = paths.section
           val key = paths.key
+          val value = get_value_by_section_and_key(t._1._1, section, key)
 
-          section_exists(rdd._1._1, section, key)
+          // (document, rule_id, when_keys, value)
+          InvoiceAndWhensKeys(t._1._1, t._2.section, t._2.key, t._1._2, value)
         })
       })
-      .map({d =>
-        InvoiceAndWhensKeys(d._2.section, d._2.key, d._1._1)
+
+      // Filter out empty values
+      .filter({r =>
+        r.value != null
       })
+
+      // Get predicates
       .transform({rdd =>
         rdd.joinWithCassandraTable("xadf", "whens")
       })
+
+      // Filter out by predicates
       .filter({tuple =>
         filter_all(tuple)
       })
+
       .foreachRDD({rdd =>
         rdd.foreach({it =>
-          val items = it._1.document.items
-          val rule_id = it._2.getString("rule_id")
+          val rule_id = it._1.rule_id
           val document_id = it._1.document._id
 
           val res = Map(
             "id" -> document_id,
-            "rule_id" -> rule_id,
-            "items" -> items
+            "rule_id" -> rule_id
           )
           implicit val formats = Serialization.formats(NoTypeHints)
 
