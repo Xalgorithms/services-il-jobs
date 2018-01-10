@@ -4,5 +4,6 @@
   ],
   "receiver_topic": "xadf.compute.applications",
   "producer_topic": "xadf.compute.items",
-  "cassandra_host": "localhost"
+  "cassandra_host": "localhost",
+  "mongo_host": "mongodb://127.0.0.1/xadf.rules"
 }

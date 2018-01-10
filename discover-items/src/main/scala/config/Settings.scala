@@ -9,4 +9,5 @@ object Settings {
   lazy val receiver_topic =  config.getString("receiver_topic")
   lazy val producer_topic =  config.getString("producer_topic")
   lazy val cassandra_host =  config.getString("cassandra_host")
+  lazy val mongo_host     =  config.getString("mongo_host")
 }
