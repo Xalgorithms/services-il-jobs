@@ -10,9 +10,6 @@ import kafka.serializer.StringDecoder
 import com.datastax.spark.connector._
 import com.mongodb.spark.config.ReadConfig
 import org.apache.commons.lang3.reflect.FieldUtils
-import org.json4s.NoTypeHints
-import org.json4s.native.Serialization
-import org.json4s.native.Serialization.write
 import org.xalgorithms.discover_items.udt._
 
 
@@ -241,14 +238,7 @@ object Job {
           val rule_id = it._1.rule_id
           val document_id = it._1.document._id
 
-          val res = Map(
-            "id" -> document_id,
-            "rule_id" -> rule_id
-          )
-          implicit val formats = Serialization.formats(NoTypeHints)
-
-          val jsonStr = write(res)
-          kafkaSink.value.send(Settings.producer_topic, jsonStr)
+          kafkaSink.value.send(Settings.producer_topic, document_id + ":" + rule_id)
         })
       })
 
