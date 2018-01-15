@@ -1,0 +1,21 @@
+{
+  "EffectiveRules" : {
+    "topics" : {
+      "input" : "xadf.compute.documents",
+      "output" : "xadf.compute.applications"
+    },
+    "spark" : {
+      "spark.app.name" : "jobs-xa-effective-rules"
+    },
+    "kafka" : {
+      "source" : {
+        "metadata.broker.list" : "localhost:9092"
+      },
+      "sink" : {
+        "bootstrap.servers": "localhost:9092"
+      }
+    },
+    "batch_duration" : "5s",
+    "checkpoint_dir" : "./streaming-checkpoints"
+  }
+}
