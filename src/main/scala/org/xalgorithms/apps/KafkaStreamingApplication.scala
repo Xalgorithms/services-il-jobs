@@ -14,14 +14,14 @@ import org.apache.spark.streaming.StreamingContext
 import org.apache.spark.streaming.dstream.DStream
 import org.apache.spark.streaming.kafka.KafkaUtils
 
-trait KafkaStreamingApplication {
-  def config: Map[String, String]
-  def batch_duration: FiniteDuration
-  def checkpoint_dir: String
+class KafkaStreamingApplication(cfg: ApplicationConfig) {
+  def spark_cfg: Map[String, String] = cfg.spark
+  def batch_duration: FiniteDuration = cfg.batch_duration
+  def checkpoint_dir: String = cfg.checkpoint_dir
 
   def with_context(scfg: ApplicationConfig, fn: (SparkContext, StreamingContext, DStream[String]) => DStream[String]): Unit = {
     val cfg = new SparkConf()
-    config.foreach { case (n, v) => cfg.setIfMissing(n, v) }
+    spark_cfg.foreach { case (n, v) => cfg.setIfMissing(n, v) }
     val ctx = new SparkContext(cfg)
     val sctx = new StreamingContext(ctx, Seconds(batch_duration.toSeconds))
     val source = KafkaSource(scfg.kafka_source)
@@ -39,6 +39,8 @@ trait KafkaStreamingApplication {
   }
 }
 
+import com.typesafe.config.Config
+
 case class ApplicationConfig(
   topic_input: String,
   topic_output: String,
@@ -46,8 +48,30 @@ case class ApplicationConfig(
   kafka_sink: Map[String, String],
   spark: Map[String, String],
   batch_duration: FiniteDuration,
-  checkpoint_dir: String
+  checkpoint_dir: String,
+  job: Config
 ) extends Serializable
+
+object ApplicationConfig {
+  import com.typesafe.config.ConfigFactory
+  import net.ceedubs.ficus.Ficus._
+
+  def apply(name: String): ApplicationConfig = apply(name, ConfigFactory.load)
+
+  def apply(name: String, all_cfg: Config): ApplicationConfig = {
+    val app_cfg = all_cfg.getConfig(s"$name.application")
+    new ApplicationConfig(
+      app_cfg.as[String]("topics.input"),
+      app_cfg.as[String]("topics.output"),
+      app_cfg.as[Map[String, String]]("kafka.source"),
+      app_cfg.as[Map[String, String]]("kafka.sink"),
+      app_cfg.as[Map[String, String]]("spark"),
+      app_cfg.as[FiniteDuration]("batch_duration"),
+      app_cfg.as[String]("checkpoint_dir"),
+      all_cfg.getConfig(s"$name.job")
+    )
+  }
+}
 
 class KafkaSource(cfg: Map[String, String]) {
   def create(ctx: StreamingContext, topic: String): DStream[String] = {
