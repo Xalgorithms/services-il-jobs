@@ -26,7 +26,9 @@ class interpreterTest extends FunSuite with BeforeAndAfterEach {
     val actualContext = interpreter.parse(context, step)
     val actual$ = (actualContext \ "$").get
 
-    val expected$ = JsObject(Seq("a" -> JsString("text 1")))
+    val expected$ = JsObject(Seq(
+      "a" -> JsString("text 1")
+    ))
 
     assert(actual$ == expected$)
   }
@@ -41,7 +43,27 @@ class interpreterTest extends FunSuite with BeforeAndAfterEach {
     val actualContext = interpreter.parse(context, step)
     val actual$ = (actualContext \ "$").get
 
-    val expected$ = JsObject(Seq("a" -> JsString("text 1"), "b" -> JsString("text 2"), "c" -> JsNumber(2), "d" -> JsString("5")))
+    val expected$ = JsObject(Seq(
+      "a" -> JsString("text 1"),
+      "b" -> JsString("text 2"),
+      "c" -> JsNumber(2),
+      "d" -> JsString("5")
+    ))
+
+    assert(actual$ == expected$)
+  }
+
+  test("Should interpret map3 properly") {
+    val contextSource = Source.fromURL(getClass.getResource("/context.json"))
+    val context = contextSource.mkString
+
+    val stepsSource = Source.fromURL(getClass.getResource("/map3.json"))
+    val step = stepsSource.mkString
+
+    val actualContext = interpreter.parse(context, step)
+    val actual$ = (actualContext \ "$").get
+
+    val expected$ = JsObject(Seq("b" -> JsString("1"), "a" -> JsNumber(12)))
 
     assert(actual$ == expected$)
   }

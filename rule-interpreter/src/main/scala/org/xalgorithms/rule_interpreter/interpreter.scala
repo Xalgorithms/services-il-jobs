@@ -34,6 +34,10 @@ object interpreter {
     setKey(c, "$", JsObject(Seq()))
   }
 
+  def get$(c: JsValue): JsValue = {
+    (c \ "$").get
+  }
+
   def getContext(c: JsValue, t: Table): JsValue = {
     val section = t.section
     if (section != "_virtual") {
@@ -45,7 +49,7 @@ object interpreter {
     return null
   }
 
-  def makeAssignment(rootContext: JsValue, context: JsValue, assignments: Array[Assignment]): JsValue = {
+  def makeAssignment(rootContext: JsValue, context: JsValue, assignments: List[Assignment]): JsValue = {
     var res = rootContext
 
     assignments.foreach { a =>
@@ -63,7 +67,7 @@ object interpreter {
   }
 
   def referenceAssingnment(root: JsValue, c: JsValue, a: Assignment): JsValue = {
-    val key = a.column
+    val key = a.column.get
     val value = getValueByKeyString(c, a.key.get)
     val obj = (root \ "$").get.as[JsObject]
 
@@ -73,7 +77,7 @@ object interpreter {
   }
 
   def stringAssignment(root: JsValue, c: JsValue, a: Assignment): JsValue = {
-    val key = a.column
+    val key = a.column.get
     val value = a.value.getOrElse("")
     val obj = (root \ "$").get.as[JsObject]
 
@@ -83,7 +87,7 @@ object interpreter {
   }
 
   def numberAssignment(root: JsValue, c: JsValue, a: Assignment): JsValue = {
-    val key = a.column
+    val key = a.column.get
     val value = a.value.getOrElse("")
     val obj = (root \ "$").get.as[JsObject]
 
@@ -92,19 +96,31 @@ object interpreter {
     setKey(root.as[JsObject], "$", $)
   }
 
-  // TODO: Implement
   def functionAssignement(root: JsValue, c: JsValue, a: Assignment): JsValue = {
-    root
+    val operator = a.name.get
+    val current$ = get$(root)
+    val value: Int = operator match {
+      case "add"  => mathOperators.invokeOperator(a, current$)
+      case "multiply" => mathOperators.invokeOperator(a, current$)
+      case _  => 0
+    }
+    val key = a.column.get
+    val obj = (root \ "$").get.as[JsObject]
+
+    val $ = setKey(obj, key, JsNumber(value))
+
+    setKey(root.as[JsObject], "$", $)
   }
 
+
+
   def setKey(o: JsObject, key: String, value: JsValue): JsObject = {
-    var m = Map(key -> value)
+    val m = Map(key -> value)
     o ++ Json.toJson(m).as[JsObject]
   }
 
   def getValueByKeyString(o: JsValue, k: String): String = {
     val parts = k.split("\\.")
-
     getValueByKeys(o, parts)
   }
 
