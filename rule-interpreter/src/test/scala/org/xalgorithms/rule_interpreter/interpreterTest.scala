@@ -2,7 +2,7 @@ package org.xalgorithms.rule_interpreter
 
 
 import org.scalatest.{BeforeAndAfterEach, FunSuite}
-import play.api.libs.json.{JsNumber, JsObject, JsString}
+import play.api.libs.json.Json
 
 import scala.io.Source
 
@@ -26,9 +26,9 @@ class interpreterTest extends FunSuite with BeforeAndAfterEach {
     val actualContext = interpreter.parse(context, step)
     val actual$ = (actualContext \ "$").get
 
-    val expected$ = JsObject(Seq(
-      "a" -> JsString("text 1")
-    ))
+    val expected$ = Json.obj(
+      "a" -> "text 1"
+    )
 
     assert(actual$ == expected$)
   }
@@ -43,12 +43,12 @@ class interpreterTest extends FunSuite with BeforeAndAfterEach {
     val actualContext = interpreter.parse(context, step)
     val actual$ = (actualContext \ "$").get
 
-    val expected$ = JsObject(Seq(
-      "a" -> JsString("text 1"),
-      "b" -> JsString("text 2"),
-      "c" -> JsNumber(2),
-      "d" -> JsString("5")
-    ))
+    val expected$ = Json.obj(
+      "a" ->"text 1",
+      "b" -> "text 2",
+      "c" -> 2,
+      "d" -> "5"
+    )
 
     assert(actual$ == expected$)
   }
@@ -63,7 +63,65 @@ class interpreterTest extends FunSuite with BeforeAndAfterEach {
     val actualContext = interpreter.parse(context, step)
     val actual$ = (actualContext \ "$").get
 
-    val expected$ = JsObject(Seq("b" -> JsString("1"), "a" -> JsNumber(12)))
+    val expected$ = Json.obj(
+      "b" -> "1",
+      "a" -> 12
+    )
+
+    assert(actual$ == expected$)
+  }
+
+  test("Should interpret revise1 properly") {
+    val contextSource = Source.fromURL(getClass.getResource("/context.json"))
+    val context = contextSource.mkString
+
+    val stepsSource = Source.fromURL(getClass.getResource("/revise1.json"))
+    val step = stepsSource.mkString
+
+    val actualContext = interpreter.parse(context, step)
+    val actual$ = (actualContext \ "revision").get
+
+    val expected$ = Json.obj(
+      "x" -> Json.obj(
+        "y" -> Json.obj(
+          "z" -> "text 1",
+          "w" -> "1"
+        )
+      ),
+      "p" -> Json.obj(
+        "q" -> "text 2"
+      ),
+      "a" -> "text 1",
+      "b" -> "text 2",
+      "c" -> 2,
+      "d" -> "s"
+    )
+
+    assert(actual$ == expected$)
+  }
+
+  test("Should interpret revise2 properly") {
+    val contextSource = Source.fromURL(getClass.getResource("/context.json"))
+    val context = contextSource.mkString
+
+    val stepsSource = Source.fromURL(getClass.getResource("/revise2.json"))
+    val step = stepsSource.mkString
+
+    val actualContext = interpreter.parse(context, step)
+    val actual$ = (actualContext \ "revision").get
+
+    val expected$ = Json.obj(
+      "x" -> Json.obj(
+        "y" -> Json.obj(
+          "z" -> "text 1",
+          "w" -> "1"
+        )
+      ),
+      "p" -> Json.obj(
+        "q" -> "text 2"
+      ),
+      "a" -> 6
+    )
 
     assert(actual$ == expected$)
   }

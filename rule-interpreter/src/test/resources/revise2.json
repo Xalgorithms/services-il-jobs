@@ -1,0 +1,22 @@
+{
+  "name" : "revise",
+  "table" : { "type" : "reference", "section" : "tables", "key" : "items" },
+  "assignments" : [
+    {
+      "column" : "a",
+      "type" : "function",
+      "name" : "multiply",
+      "args" : [
+        {
+          "type" : "function",
+          "name" : "add",
+          "args" : [
+            { "type" : "number", "value": "1" },
+            { "type" : "number", "value" : "2" }
+          ]
+        },
+        { "type" : "number", "value" : "2" }
+      ]
+    }
+  ]
+}

@@ -2,140 +2,99 @@ package org.xalgorithms.rule_interpreter
 
 
 import org.xalgorithms.rule_interpreter.udt._
+import org.xalgorithms.rule_interpreter.common.{setEmptyVirtualTable, getVirtualTable, setKey, getValueByKeyString, getContextSection, initRevision}
 import play.api.libs.json._
 
 object interpreter {
   def parse(c: String, s: String): JsValue = {
     val stepResult: JsResult[Step] = Json.parse(s).validate[Step]
-    val step = stepResult.asOpt.getOrElse(null)
+    val step = stepResult.asOpt.orNull
 
     val parsedContext = Json.parse(c).as[JsObject]
     // Create empty $ object on context
-    val context = setEmpty$(parsedContext)
+    val contextWithVirtualTable = setEmptyVirtualTable(parsedContext)
+    val context = initRevision(contextWithVirtualTable, step)
 
     invokeParser(step.name, step, context)
   }
 
-  def invokeParser(n: String, s: Step, c: JsValue): JsValue = n match {
-    case "map" => parseMap(c, s)
+  def invokeParser(action: String, step: Step, context: JsValue): JsValue = action match {
+    case "map" => parseMap(context, step)
+    case "revise" => parseRevise(context, step)
     case n => JsString( s"Invalid action $n" )
   }
 
-  def parseMap(c: JsValue, s: Step): JsValue = {
-    val o = getContext(c, s.table)
+  def parseMap(context: JsValue, step: Step): JsValue = {
+    val section = getContextSection(context, step.table)
 
-    makeAssignment(c, o, s.assignments)
+    makeAssignment(context, section, step.assignments, "$")
   }
 
-  def setEmpty$(c: JsObject): JsObject = {
-    if ((c \ "$").isDefined) {
-      return c
-    }
-    setKey(c, "$", JsObject(Seq()))
+  def parseRevise(context: JsValue, s: Step): JsValue = {
+    val o = getContextSection(context, s.table)
+    makeAssignment(context, o, s.assignments, "revision")
   }
 
-  def get$(c: JsValue): JsValue = {
-    (c \ "$").get
-  }
-
-  def getContext(c: JsValue, t: Table): JsValue = {
-    val section = t.section
-    if (section != "_virtual") {
-      val key = t.key
-
-      return (c \ section \ key).get
-    }
-
-    return null
-  }
-
-  def makeAssignment(rootContext: JsValue, context: JsValue, assignments: List[Assignment]): JsValue = {
-    var res = rootContext
+  def makeAssignment(context: JsValue, section: JsValue, assignments: List[Assignment], target: String): JsValue = {
+    var res = context
 
     assignments.foreach { a =>
       val assignmentType = a.`type`
 
       res = assignmentType match {
-        case "reference"  => referenceAssingnment(res, context, a)
-        case "string" => stringAssignment(res, context, a)
-        case "number" => numberAssignment(res, context, a)
-        case "function"  => functionAssignement(res, context, a)
+        case "reference"  => referenceAssignment(res, section, a, target)
+        case "string" => stringAssignment(res, a, target)
+        case "number" => numberAssignment(res, a, target)
+        case "function"  => functionAssignment(res, section, a, target)
         case _  => res
       }
     }
     res
   }
 
-  def referenceAssingnment(root: JsValue, c: JsValue, a: Assignment): JsValue = {
+  def referenceAssignment(context: JsValue, section: JsValue, a: Assignment, target: String): JsValue = {
     val key = a.column.get
-    val value = getValueByKeyString(c, a.key.get)
-    val obj = (root \ "$").get.as[JsObject]
+    val value = getValueByKeyString(section, a.key.get)
+    val obj = (context \ target).get.as[JsObject]
 
-    val $ = setKey(obj, key, JsString(value))
+    val res = setKey(obj, key, JsString(value))
 
-    setKey(root.as[JsObject], "$", $)
+    setKey(context.as[JsObject], target, res)
   }
 
-  def stringAssignment(root: JsValue, c: JsValue, a: Assignment): JsValue = {
-    val key = a.column.get
-    val value = a.value.getOrElse("")
-    val obj = (root \ "$").get.as[JsObject]
-
-    val $ = setKey(obj, key, JsString(value))
-
-    setKey(root.as[JsObject], "$", $)
-  }
-
-  def numberAssignment(root: JsValue, c: JsValue, a: Assignment): JsValue = {
+  def stringAssignment(context: JsValue, a: Assignment, target: String): JsValue = {
     val key = a.column.get
     val value = a.value.getOrElse("")
-    val obj = (root \ "$").get.as[JsObject]
+    val obj = (context \ target).get.as[JsObject]
 
-    val $ = setKey(obj, key, JsNumber(value.toInt))
+    val res = setKey(obj, key, JsString(value))
 
-    setKey(root.as[JsObject], "$", $)
+    setKey(context.as[JsObject], target, res)
   }
 
-  def functionAssignement(root: JsValue, c: JsValue, a: Assignment): JsValue = {
+  def numberAssignment(context: JsValue, a: Assignment, target: String): JsValue = {
+    val key = a.column.get
+    val value = a.value.getOrElse("")
+    val obj = (context \ target).get.as[JsObject]
+
+    val res = setKey(obj, key, JsNumber(value.toInt))
+
+    setKey(context.as[JsObject], target, res)
+  }
+
+  def functionAssignment(context: JsValue, section: JsValue, a: Assignment, target: String): JsValue = {
     val operator = a.name.get
-    val current$ = get$(root)
+    val current$ = getVirtualTable(context)
     val value: Int = operator match {
       case "add"  => mathOperators.invokeOperator(a, current$)
       case "multiply" => mathOperators.invokeOperator(a, current$)
       case _  => 0
     }
     val key = a.column.get
-    val obj = (root \ "$").get.as[JsObject]
+    val obj = (context \ target).get.as[JsObject]
 
-    val $ = setKey(obj, key, JsNumber(value))
+    val res = setKey(obj, key, JsNumber(value))
 
-    setKey(root.as[JsObject], "$", $)
-  }
-
-
-
-  def setKey(o: JsObject, key: String, value: JsValue): JsObject = {
-    val m = Map(key -> value)
-    o ++ Json.toJson(m).as[JsObject]
-  }
-
-  def getValueByKeyString(o: JsValue, k: String): String = {
-    val parts = k.split("\\.")
-    getValueByKeys(o, parts)
-  }
-
-  def getValueByKeys(source: JsValue, path: Array[String]): String = {
-    val p = path.head
-    val next = (source \ p).getOrElse(null)
-
-    if (next == null) {
-      return null
-    }
-
-    if (path.length == 1) {
-      return next.as[String]
-    }
-
-    getValueByKeys(next, path.drop(1))
+    setKey(context.as[JsObject], target, res)
   }
 }
