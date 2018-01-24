@@ -20,7 +20,7 @@ object common {
 
   // Create "revision" on context with copy of the data
   def initRevision(c: JsObject, s: Step): JsObject = {
-    val section = getContextSection(c, s.table)
+    val section = getContextSection(c, s.table.get)
     setKey(c, "revision", section)
   }
 
@@ -62,5 +62,14 @@ object common {
     }
 
     getValueByKeys(next, path.drop(1))
+  }
+
+  def applyOperator(x: String, y: String, operator: String): Boolean = operator match {
+    case "eq" => x == y
+    case "neq" => x != y
+    case "lt" => x < y
+    case "lte" => x <= y
+    case "gt" => x > y
+    case "gte" => x >= y
   }
 }

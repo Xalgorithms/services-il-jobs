@@ -125,4 +125,85 @@ class interpreterTest extends FunSuite with BeforeAndAfterEach {
 
     assert(actual$ == expected$)
   }
+
+  test("Should interpret assemble1 properly") {
+    val contextSource = Source.fromURL(getClass.getResource("/context2.json"))
+    val context = contextSource.mkString
+
+    val stepsSource = Source.fromURL(getClass.getResource("/assemble1.json"))
+    val step = stepsSource.mkString
+
+    val actualContext = interpreter.parse(context, step)
+    val actual$ = (actualContext \ "table").get
+
+    val expected$ = Json.obj(
+      "table1" -> Json.obj(
+        "a" -> Json.obj(
+          "b" -> "5"
+        ),
+        "c0" -> "7"
+      ),
+      "table0" -> Json.obj(
+        "c0" -> "7"
+      )
+    )
+
+    assert(actual$ == expected$)
+  }
+
+  test("Should interpret assemble2 properly") {
+    val contextSource = Source.fromURL(getClass.getResource("/context2.json"))
+    val context = contextSource.mkString
+
+    val stepsSource = Source.fromURL(getClass.getResource("/assemble2.json"))
+    val step = stepsSource.mkString
+
+    val actualContext = interpreter.parse(context, step)
+    val actual$ = (actualContext \ "table").get
+
+    val expected$ = Json.obj(
+      "table1" -> Json.obj(
+        "a" -> Json.obj(
+          "b" -> "5"
+        ),
+        "c0" -> "7"
+      ),
+      "table0" -> Json.obj(
+        "nc0" -> "7"
+      )
+    )
+
+    assert(actual$ == expected$)
+  }
+
+  test("Should interpret assemble3 properly") {
+    val contextSource = Source.fromURL(getClass.getResource("/context3.json"))
+    val context = contextSource.mkString
+
+    val stepsSource = Source.fromURL(getClass.getResource("/assemble3.json"))
+    val step = stepsSource.mkString
+
+    val actualContext = interpreter.parse(context, step)
+    val actual$ = (actualContext \ "table").get
+
+    val expected$ = Json.obj(
+      "table1" -> Json.obj(
+        "a" -> Json.obj(
+          "b" -> "5"
+        ),
+        "c0" -> "7",
+        "c1" -> "1"
+      ),
+      "table2" -> Json.obj(
+        "b0" -> "8"
+      ),
+      "table0" -> Json.obj(
+        "nc0" -> "7",
+        "nc1" -> "1",
+        "nc2" -> "8"
+      )
+    )
+
+    assert(actual$ == expected$)
+  }
 }
