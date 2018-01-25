@@ -1,0 +1,48 @@
+{
+  "EffectiveRules" : {
+    "application" : {
+      "topics" : {
+        "input" : "xadf.compute.documents",
+        "output" : "xadf.compute.effective"
+      },
+      "spark" : {
+        "spark.app.name" : "jobs-xa-effective-rules"
+      },
+      "kafka" : {
+        "source" : {
+          "metadata.broker.list" : "localhost:9092"
+        },
+        "sink" : {
+          "bootstrap.servers": "localhost:9092"
+        }
+      },
+      "batch_duration" : "5s",
+      "checkpoint_dir" : "./streaming-checkpoints"
+    },
+    "job" : {
+    }
+  },
+  "ApplicableRules" : {
+    "application" : {
+      "topics" : {
+        "input" : "xadf.compute.effective",
+        "output" : "xadf.compute.applicable"
+      },
+      "spark" : {
+        "spark.app.name" : "jobs-xa-applicable-rules"
+      },
+      "kafka" : {
+        "source" : {
+          "metadata.broker.list" : "localhost:9092"
+        },
+        "sink" : {
+          "bootstrap.servers": "localhost:9092"
+        }
+      },
+      "batch_duration" : "5s",
+      "checkpoint_dir" : "./streaming-checkpoints"
+    },
+    "job" : {
+    }
+  }
+}
