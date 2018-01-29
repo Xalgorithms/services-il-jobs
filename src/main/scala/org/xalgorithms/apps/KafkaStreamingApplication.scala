@@ -1,6 +1,9 @@
 package org.xalgorithms.apps
 
+import java.lang.management.ManagementFactory
+
 import kafka.serializer.StringDecoder
+
 import scala.collection.mutable
 import scala.concurrent.duration.FiniteDuration
 import org.apache.kafka.clients.producer.KafkaProducer
@@ -13,21 +16,31 @@ import org.apache.spark.streaming.Seconds
 import org.apache.spark.streaming.StreamingContext
 import org.apache.spark.streaming.dstream.DStream
 import org.apache.spark.streaming.kafka.KafkaUtils
+import org.bson.Document
 
-class KafkaStreamingApplication(cfg: ApplicationConfig) {
+class KafkaStreamingApplication(cfg: ApplicationConfig) extends Serializable {
   def spark_cfg: Map[String, String] = cfg.spark
   def batch_duration: FiniteDuration = cfg.batch_duration
   def checkpoint_dir: String = cfg.checkpoint_dir
 
   def with_context(scfg: ApplicationConfig, fn: (SparkContext, StreamingContext, DStream[String]) => DStream[String]): Unit = {
+    val isIDE = {
+      ManagementFactory.getRuntimeMXBean.getInputArguments.toString.contains("IntelliJ IDEA")
+    }
     val cfg = new SparkConf()
     spark_cfg.foreach { case (n, v) => cfg.setIfMissing(n, v) }
+
+    if (isIDE) {
+      cfg.setMaster("local[*]")
+    }
+
     val ctx = new SparkContext(cfg)
     val sctx = new StreamingContext(ctx, Seconds(batch_duration.toSeconds))
     val source = KafkaSource(scfg.kafka_source)
     val input = source.create(sctx, scfg.topic_input)
 
-    sctx.checkpoint(checkpoint_dir)
+    // FIXME: Spits out errors, when spark context is accessed from transform
+    // sctx.checkpoint(checkpoint_dir)
 
     val output = fn(ctx, sctx, input)
 
