@@ -8,7 +8,6 @@ import scala.collection.mutable
 import scala.concurrent.duration.FiniteDuration
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
-import org.apache.kafka.clients.producer.RecordMetadata
 import org.apache.spark.SparkConf
 import org.apache.spark.SparkContext
 import org.apache.spark.TaskContext
@@ -16,8 +15,9 @@ import org.apache.spark.streaming.Seconds
 import org.apache.spark.streaming.StreamingContext
 import org.apache.spark.streaming.dstream.DStream
 import org.apache.spark.streaming.kafka.KafkaUtils
-import org.bson.Document
 
+
+// The job might be run on one of the executors, hence it should be serializable
 class KafkaStreamingApplication(cfg: ApplicationConfig) extends Serializable {
   def spark_cfg: Map[String, String] = cfg.spark
   def batch_duration: FiniteDuration = cfg.batch_duration
