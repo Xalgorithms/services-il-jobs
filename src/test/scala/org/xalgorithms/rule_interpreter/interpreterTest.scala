@@ -18,12 +18,12 @@ class interpreterTest extends FunSuite with BeforeAndAfterEach {
 
   test("Should interpret map1 properly") {
     val contextSource = Source.fromURL(getClass.getResource("/context.json"))
-    val context = contextSource.mkString
+    val context = new Context(contextSource.mkString)
 
     val stepsSource = Source.fromURL(getClass.getResource("/map1.json"))
-    val step = stepsSource.mkString
+    val steps = new Steps(stepsSource.mkString)
 
-    val actualContext = interpreter.parse(context, step)
+    val actualContext = interpreter.runAll(context, steps).get
     val actual$ = (actualContext \ "$").get
 
     val expected$ = Json.obj(
@@ -35,12 +35,12 @@ class interpreterTest extends FunSuite with BeforeAndAfterEach {
 
   test("Should interpret map2 properly") {
     val contextSource = Source.fromURL(getClass.getResource("/context.json"))
-    val context = contextSource.mkString
+    val context = new Context(contextSource.mkString)
 
     val stepsSource = Source.fromURL(getClass.getResource("/map2.json"))
-    val step = stepsSource.mkString
+    val steps = new Steps(stepsSource.mkString)
 
-    val actualContext = interpreter.parse(context, step)
+    val actualContext = interpreter.runAll(context, steps).get
     val actual$ = (actualContext \ "$").get
 
     val expected$ = Json.obj(
@@ -55,12 +55,12 @@ class interpreterTest extends FunSuite with BeforeAndAfterEach {
 
   test("Should interpret map3 properly") {
     val contextSource = Source.fromURL(getClass.getResource("/context.json"))
-    val context = contextSource.mkString
+    val context = new Context(contextSource.mkString)
 
     val stepsSource = Source.fromURL(getClass.getResource("/map3.json"))
-    val step = stepsSource.mkString
+    val steps = new Steps(stepsSource.mkString)
 
-    val actualContext = interpreter.parse(context, step)
+    val actualContext = interpreter.runAll(context, steps).get
     val actual$ = (actualContext \ "$").get
 
     val expected$ = Json.obj(
@@ -73,12 +73,12 @@ class interpreterTest extends FunSuite with BeforeAndAfterEach {
 
   test("Should interpret revise1 properly") {
     val contextSource = Source.fromURL(getClass.getResource("/context.json"))
-    val context = contextSource.mkString
+    val context = new Context(contextSource.mkString)
 
     val stepsSource = Source.fromURL(getClass.getResource("/revise1.json"))
-    val step = stepsSource.mkString
+    val steps = new Steps(stepsSource.mkString)
 
-    val actualContext = interpreter.parse(context, step)
+    val actualContext = interpreter.runAll(context, steps).get
     val actual$ = (actualContext \ "revision").get
 
     val expected$ = Json.obj(
@@ -102,12 +102,12 @@ class interpreterTest extends FunSuite with BeforeAndAfterEach {
 
   test("Should interpret revise2 properly") {
     val contextSource = Source.fromURL(getClass.getResource("/context.json"))
-    val context = contextSource.mkString
+    val context = new Context(contextSource.mkString)
 
     val stepsSource = Source.fromURL(getClass.getResource("/revise2.json"))
-    val step = stepsSource.mkString
+    val steps = new Steps(stepsSource.mkString)
 
-    val actualContext = interpreter.parse(context, step)
+    val actualContext = interpreter.runAll(context, steps).get
     val actual$ = (actualContext \ "revision").get
 
     val expected$ = Json.obj(
@@ -128,12 +128,12 @@ class interpreterTest extends FunSuite with BeforeAndAfterEach {
 
   test("Should interpret assemble1 properly") {
     val contextSource = Source.fromURL(getClass.getResource("/context2.json"))
-    val context = contextSource.mkString
+    val context = new Context(contextSource.mkString)
 
     val stepsSource = Source.fromURL(getClass.getResource("/assemble1.json"))
-    val step = stepsSource.mkString
+    val steps = new Steps(stepsSource.mkString)
 
-    val actualContext = interpreter.parse(context, step)
+    val actualContext = interpreter.runAll(context, steps).get
     val actual$ = (actualContext \ "table").get
 
     val expected$ = Json.obj(
@@ -153,12 +153,12 @@ class interpreterTest extends FunSuite with BeforeAndAfterEach {
 
   test("Should interpret assemble2 properly") {
     val contextSource = Source.fromURL(getClass.getResource("/context2.json"))
-    val context = contextSource.mkString
+    val context = new Context(contextSource.mkString)
 
     val stepsSource = Source.fromURL(getClass.getResource("/assemble2.json"))
-    val step = stepsSource.mkString
+    val steps = new Steps(stepsSource.mkString)
 
-    val actualContext = interpreter.parse(context, step)
+    val actualContext = interpreter.runAll(context, steps).get
     val actual$ = (actualContext \ "table").get
 
     val expected$ = Json.obj(
@@ -178,12 +178,12 @@ class interpreterTest extends FunSuite with BeforeAndAfterEach {
 
   test("Should interpret assemble3 properly") {
     val contextSource = Source.fromURL(getClass.getResource("/context3.json"))
-    val context = contextSource.mkString
+    val context = new Context(contextSource.mkString)
 
     val stepsSource = Source.fromURL(getClass.getResource("/assemble3.json"))
-    val step = stepsSource.mkString
+    val steps = new Steps(stepsSource.mkString)
 
-    val actualContext = interpreter.parse(context, step)
+    val actualContext = interpreter.runAll(context, steps).get
     val actual$ = (actualContext \ "table").get
 
     val expected$ = Json.obj(

@@ -16,11 +16,11 @@ object utils {
     Json.stringify(v)
   }
 
-  def extractStep(r: String): String = {
+  def extractSteps(r: String): String = {
     val parsedRule = Json.parse(r)
-    val step = (parsedRule \ "steps" \ 0).get
+    val steps = (parsedRule \ "steps").get
 
-    Json.stringify(step)
+    Json.stringify(steps)
   }
 
   def extractRevision(r: JsValue): String = {

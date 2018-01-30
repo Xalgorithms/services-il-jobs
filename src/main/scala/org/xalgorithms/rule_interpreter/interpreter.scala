@@ -2,59 +2,58 @@ package org.xalgorithms.rule_interpreter
 
 
 import org.xalgorithms.rule_interpreter.udt._
-import org.xalgorithms.rule_interpreter.common.{getContextSection, getValueByKeyString, getVirtualTable, initRevision,
-  setEmptyVirtualTable, setKey, applyOperator}
+import org.xalgorithms.rule_interpreter.common.{getValueByKeyString, applyOperator, setKey}
 import play.api.libs.json._
 
 object interpreter {
-  def parse(c: String, s: String): JsValue = {
-    println(s)
-    println(Json)
-    val stepResult: JsResult[Step] = Json.parse(s).validate[Step]
-    val step = stepResult.asOpt.orNull
+  def runAll(c: Context, s: Steps): Context = {
+    var res = c
+    val steps = s.get
 
-    val parsedContext = Json.parse(c).as[JsObject]
-    // Create empty $ object on context
-    val context = setEmptyVirtualTable(parsedContext)
+    steps.foreach {s =>
+      res = run(c, s)
+    }
 
-    invokeParser(step.name, step, context)
+    res
   }
 
-  def invokeParser(action: String, step: Step, context: JsValue): JsValue = action match {
-    case "map" => parseMap(context, step)
-    case "revise" => parseRevise(context, step)
-    case "assemble" => parseAssemble(context, step)
-    case n => JsString( s"Invalid action $n" )
+  def run(c: Context, s: Step): Context = {
+    invokeInterpreter(s.name, s, c)
   }
 
-  def parseMap(context: JsValue, step: Step): JsValue = {
-    val section = getContextSection(context, step.table.get)
-
-    makeAssignment(context, section, step.assignments.get, "$")
+  def invokeInterpreter(action: String, step: Step, context: Context): Context = action match {
+    case "map" => interpretMap(context, step)
+    case "revise" => interpretRevise(context, step)
+    case "assemble" => interpretAssemble(context, step)
+    case n => throw new Exception(s"Invalid action $n")
   }
 
-  def parseRevise(context: JsValue, s: Step): JsValue = {
-    val c = initRevision(context.as[JsObject], s)
-    val o = getContextSection(c, s.table.get)
+  def interpretMap(context: Context, step: Step): Context = {
+    val section = context.getContextSection(step.table.get)
 
-    makeAssignment(c, o, s.assignments.get, "revision")
+    context.makeAssignment(section, step.assignments.get, "$")
   }
 
-  def parseAssemble(context: JsValue, s: Step): JsValue = {
+  def interpretRevise(context: Context, s: Step): Context = {
+    context.initRevision(s)
+    val o = context.getContextSection(s.table.get)
+
+    context.makeAssignment(o, s.assignments.get, "revision")
+  }
+
+  def interpretAssemble(context: Context, s: Step): Context = {
     var target = Json.obj()
 
     val columns = s.columns.get
     columns.foreach {c =>
       val sourceTableName = c.table
       c.sources.foreach {s =>
-        val v = getColumnValue(context, s, sourceTableName)(target)
+        val v = getColumnValue(context.get, s, sourceTableName)(target)
         target = setKey(target, s.name, JsString(v))
       }
     }
 
-    val newTable = setKey((context \ "table").as[JsObject], s.table_name.get, target)
-
-    setKey(context.as[JsObject], "table", newTable)
+    context.setNewTable(s.table_name.get, target)
   }
 
   def getColumnValue(context: JsValue, s: Source, sourceTableName: String)(implicit target: JsObject = null): String = {
@@ -92,68 +91,5 @@ object interpreter {
       case "name" => (target \ a.value.get).get.as[String]
       case n => s"Invalid type $n"
     }
-  }
-
-  def makeAssignment(context: JsValue, section: JsValue, assignments: List[Assignment], target: String): JsValue = {
-    var res = context
-
-    assignments.foreach { a =>
-      val assignmentType = a.`type`
-
-      res = assignmentType match {
-        case "reference"  => referenceAssignment(res, section, a, target)
-        case "string" => stringAssignment(res, a, target)
-        case "number" => numberAssignment(res, a, target)
-        case "function"  => functionAssignment(res, section, a, target)
-        case _  => res
-      }
-    }
-    res
-  }
-
-  def referenceAssignment(context: JsValue, section: JsValue, a: Assignment, target: String): JsValue = {
-    val key = a.column.get
-    val value = getValueByKeyString(section, a.key.get)
-    val obj = (context \ target).get.as[JsObject]
-
-    val res = setKey(obj, key, JsString(value))
-
-    setKey(context.as[JsObject], target, res)
-  }
-
-  def stringAssignment(context: JsValue, a: Assignment, target: String): JsValue = {
-    val key = a.column.get
-    val value = a.value.getOrElse("")
-    val obj = (context \ target).get.as[JsObject]
-
-    val res = setKey(obj, key, JsString(value))
-
-    setKey(context.as[JsObject], target, res)
-  }
-
-  def numberAssignment(context: JsValue, a: Assignment, target: String): JsValue = {
-    val key = a.column.get
-    val value = a.value.getOrElse("")
-    val obj = (context \ target).get.as[JsObject]
-
-    val res = setKey(obj, key, JsNumber(value.toInt))
-
-    setKey(context.as[JsObject], target, res)
-  }
-
-  def functionAssignment(context: JsValue, section: JsValue, a: Assignment, target: String): JsValue = {
-    val operator = a.name.get
-    val current$ = getVirtualTable(context)
-    val value: Int = operator match {
-      case "add"  => mathOperators.invokeOperator(a, current$)
-      case "multiply" => mathOperators.invokeOperator(a, current$)
-      case _  => 0
-    }
-    val key = a.column.get
-    val obj = (context \ target).get.as[JsObject]
-
-    val res = setKey(obj, key, JsNumber(value))
-
-    setKey(context.as[JsObject], target, res)
   }
 }

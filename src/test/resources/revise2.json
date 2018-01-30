@@ -1,4 +1,4 @@
-{
+[{
   "name" : "revise",
   "table" : { "type" : "reference", "section" : "tables", "key" : "items" },
   "assignments" : [
@@ -19,4 +19,4 @@
       ]
     }
   ]
-}
+}]

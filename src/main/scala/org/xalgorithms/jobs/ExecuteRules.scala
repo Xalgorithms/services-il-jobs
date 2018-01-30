@@ -6,8 +6,8 @@ import com.mongodb.spark.config.{ReadConfig, WriteConfig}
 import org.xalgorithms.apps._
 import org.bson.Document
 import org.bson.types.ObjectId
-import org.xalgorithms.rule_interpreter.interpreter
-import org.xalgorithms.rule_interpreter.utils.{documentToContext, extractStep, extractRevision}
+import org.xalgorithms.rule_interpreter.{Context, Steps, interpreter}
+import org.xalgorithms.rule_interpreter.utils.{documentToContext, extractRevision, extractSteps}
 
 class ExecuteRules(cfg: ApplicationConfig) extends KafkaStreamingApplication(cfg) {
   def extractValues(t: (Array[Document], Array[Document])): (String, String) = {
@@ -18,7 +18,7 @@ class ExecuteRules(cfg: ApplicationConfig) extends KafkaStreamingApplication(cfg
       docJson = documentToContext(t._1(0).toJson)
     }
     if (t._2.length > 0) {
-      ruleJson = extractStep(t._2(0).toJson)
+      ruleJson = extractSteps(t._2(0).toJson)
     }
 
     (docJson, ruleJson)
@@ -26,8 +26,8 @@ class ExecuteRules(cfg: ApplicationConfig) extends KafkaStreamingApplication(cfg
 
   def applyRules(d: String, r: String): String = {
     if (d != "" && r != "") {
-      val parsedDoc = interpreter.parse(d, r)
-      return extractRevision(parsedDoc)
+      val parsedDoc = interpreter.runAll(new Context(d), new Steps(r))
+      return extractRevision(parsedDoc.get)
     }
     ""
   }

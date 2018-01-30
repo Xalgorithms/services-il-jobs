@@ -1,4 +1,4 @@
-{
+[{
   "name" : "assemble",
   "table_name" : "table0",
   "columns" : [
@@ -40,4 +40,4 @@
       ]
     }
   ]
-}
+}]

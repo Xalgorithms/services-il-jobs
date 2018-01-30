@@ -1,4 +1,4 @@
-{
+[{
   "name" : "map",
   "table" : { "type" : "reference", "section" : "tables", "key" : "items" },
   "assignments" : [
@@ -7,4 +7,4 @@
     { "column": "c", "type" : "number", "value" : "2" },
     { "column": "d", "type" : "string", "value" : "5" }
   ]
-}
+}]
