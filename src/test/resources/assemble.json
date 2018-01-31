@@ -1,0 +1,145 @@
+[
+  {
+    "context": "assemble_context_1",
+    "input" : {
+      "steps" : [
+        {
+          "name" : "assemble",
+          "table_name" : "table0",
+          "columns" : [
+            {
+              "table" : "table1",
+              "sources" : [{
+                "source" : "c0",
+                "name" : "c0",
+                "expr" : {
+                  "left" : { "type" : "reference", "section" : "envelope", "key" : "x.y" },
+                  "right" : { "type" : "reference", "section" : "_context", "key" : "a.b" },
+                  "op": "eq"
+                }
+              }]
+            }
+          ]
+        }
+      ]
+    },
+    "expects": {
+      "table1": {
+        "a": {
+          "b": "5"
+        },
+        "c0": "7"
+      },
+      "table0": {
+        "c0": "7"
+      }
+    }
+  },
+
+
+  {
+    "context": "assemble_context_1",
+    "input" : {
+      "steps" : [
+        {
+          "name" : "assemble",
+          "table_name" : "table0",
+          "columns" : [
+            {
+              "table" : "table1",
+              "sources" : [{
+                "source" : "c0",
+                "name" : "nc0",
+                "expr" : {
+                  "left" : { "type" : "reference", "section" : "envelope", "key" : "x.y" },
+                  "right" : { "type" : "number", "value" : "6" },
+                  "op": "lte"
+                }
+              }]
+            }
+          ]
+        }
+      ]
+    },
+    "expects": {
+      "table1": {
+        "a": {
+          "b": "5"
+        },
+        "c0": "7"
+      },
+      "table0": {
+        "nc0": "7"
+      }
+    }
+  },
+
+
+  {
+    "context": "assemble_context_2",
+    "input" : {
+      "steps" : [
+        {
+          "name" : "assemble",
+          "table_name" : "table0",
+          "columns" : [
+            {
+              "table" : "table1",
+              "sources" : [
+                {
+                  "source" : "c0",
+                  "name" : "nc0",
+                  "expr" : {
+                    "left" : { "type" : "reference", "section" : "envelope", "key" : "x.y" },
+                    "right" : { "type" : "number", "value" : "6" },
+                    "op" : "lte"
+                  }
+                },
+                {
+                  "source" : "c1",
+                  "name" : "nc1",
+                  "expr" : {
+                    "left" : { "type" : "name", "value": "nc0" },
+                    "right" : { "type" : "number", "value" : "7" },
+                    "op": "eq"
+                  }
+                }
+              ]
+            },
+            {
+              "table" : "table2",
+              "sources" : [
+                {
+                  "source" : "b0",
+                  "name" : "nc2",
+                  "expr" : {
+                    "left" : { "type" : "reference", "section" : "envelope", "key" : "p.q" },
+                    "right" : { "type" : "number", "value" : "3" },
+                    "op": "eq"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "expects": {
+      "table1": {
+        "a": {
+          "b": "5"
+        },
+        "c0": "7",
+        "c1": "1"
+      },
+      "table2": {
+        "b0": "8"
+      },
+      "table0": {
+        "nc0": "7",
+        "nc1": "1",
+        "nc2": "8"
+      }
+    }
+  }
+]

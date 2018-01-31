@@ -1,7 +1,0 @@
-[{
-  "name" : "map",
-  "table" : { "type" : "reference", "section" : "tables", "key" : "items" },
-  "assignments" : [
-    { "column" : "a", "type" : "reference", "section" : "_context", "key" : "x.y.z" }
-  ]
-}]
