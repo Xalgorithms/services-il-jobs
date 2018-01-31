@@ -1,6 +1,6 @@
 package org.xalgorithms.rule_interpreter
 
-import play.api.libs.json.{JsObject, JsValue, Json}
+import play.api.libs.json.{JsValue, Json}
 
 import scala.io.Source
 

@@ -5,6 +5,31 @@ import org.xalgorithms.rule_interpreter.common.setKey
 import org.xalgorithms.rule_interpreter.udt.{Assignment, Step, Table}
 import play.api.libs.json._
 
+
+/**
+  * Context is a data in json format, which on input looks like
+  * {
+  *   "tables": {
+  *     "items": ... document items json ...
+  *     ... any other relevant tables ...
+  *   }
+  * }
+  *
+  * On output it looks like:
+  * {
+  *   "tables": {
+  *     "items": ... document items json ...
+  *     ... any other relevant tables ...
+  *   },
+  *   "$": {
+  *     ... all virtual tables (results of intermediate operations) ...
+  *   },
+  *   "revision": {
+  *     ... the final revised document (result of REVISE operation) ...
+  *   }
+  * }
+  *
+  */
 class Context(s: String = "") {
   private[this] var c: JsObject = Json.parse(s).as[JsObject]
 

@@ -12,10 +12,6 @@ object utils {
     Json.stringify(res)
   }
 
-  def jsonToString(v: JsValue): String = {
-    Json.stringify(v)
-  }
-
   def extractSteps(r: String): String = {
     val parsedRule = Json.parse(r)
     val steps = (parsedRule \ "steps").get
