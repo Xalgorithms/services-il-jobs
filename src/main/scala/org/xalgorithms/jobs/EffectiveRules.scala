@@ -33,6 +33,7 @@ class Effective(
 
   def is_global_or_matching_jurisdication(
     country: Option[String], region: Option[String]): Boolean = {
+
     if (None == this.country) {
       // this rule applies anywhere
       return true
@@ -71,14 +72,21 @@ class Effective(
   }
 
   def make_local_datetime(dt: DateTime, tz: String): DateTime = {
-    new DateTime(
-      dt.year.get, dt.monthOfYear.get, dt.dayOfMonth.get,
-      dt.hourOfDay.get, dt.minuteOfHour.get, dt.secondOfMinute.get, dt.millisOfSecond.get,
-      DateTimeZone.forID(tz))
+    // https://groups.google.com/a/lists.datastax.com/forum/#!topic/spark-connector-user/Uv9UoFjA9SU
+    // This discussion lends weight to the observation that the
+    // Cassandra driver reads DateTime in LOCALTIME, therefore we need
+    // to convert BACK to UTC (we store in UTC) before swapping the
+    // TimeZone. The DateTime method used here merely switches the
+    // timezone without conversion.
+    dt.toDateTime(DateTimeZone.UTC).withZoneRetainFields(DateTimeZone.forID(tz))
   }
 
   def maybe_make_local_datetime(dt: Option[DateTime], tz: String): Option[DateTime] = {
-    if (Some(dt) == dt) Some(make_local_datetime(dt.get, tz)) else None
+    if (None == dt ) {
+      return None
+    }
+
+    Some(make_local_datetime(dt.get, tz))
   }
 }
 
