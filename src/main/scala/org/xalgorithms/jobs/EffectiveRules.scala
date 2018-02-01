@@ -35,10 +35,10 @@ class Effective(
     country: Option[String], region: Option[String]): Boolean = {
     if (None == this.country) {
       // this rule applies anywhere
-      true
+      return true
     } else if (this.country == Some(this.country) && None == this.region) {
       // this rule applies anywhere in the country
-      this.country.get == country.get
+      return this.country.get == country.get
     }
 
     // otherwise, must have matching region
@@ -53,7 +53,7 @@ class Effective(
       // be an Effective for the correct timezone.
       // in the case of missing zones, there's nothing we can do
       // same for if the document has no timezone
-      false
+      return false
     }
 
     val local_issued = make_local_datetime(issued.get, timezone.get)
