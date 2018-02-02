@@ -6,8 +6,7 @@ import play.api.libs.json._
 object common {
   // Set key value by key
   def setKey(o: JsObject, key: String, value: JsValue): JsObject = {
-    val m = Map(key -> value)
-    o ++ Json.toJson(m).as[JsObject]
+    o ++ Json.obj(key -> value)
   }
 
   // Extract the value of comma separated path
@@ -40,5 +39,30 @@ object common {
     case "lte" => x <= y
     case "gt" => x > y
     case "gte" => x >= y
+  }
+
+  def recursiveSetKeys(o: JsValue, keys: String, value: String): JsValue = {
+    val parts = keys.split("\\.")
+
+    recursiveSetValueByKeys(o, parts, value)
+  }
+
+  def recursiveSetValueByKeys(source: JsValue, path: Array[String], value: String): JsValue = {
+    val p = path.head
+    val next = (source \ p).getOrElse(JsNull)
+
+    if (next == JsNull && path.length != 1) {
+      val emptyObj = Json.obj()
+
+      val res = recursiveSetValueByKeys(emptyObj, path.drop(1), value)
+      return setKey(source.as[JsObject], p, res)
+    }
+
+    if (path.length == 1) {
+      return setKey(source.as[JsObject], p, JsString(value))
+    }
+
+    val res = recursiveSetValueByKeys(next, path.drop(1), value)
+    setKey(source.as[JsObject], p, res)
   }
 }

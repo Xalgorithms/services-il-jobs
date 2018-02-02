@@ -35,7 +35,6 @@ object interpreter {
   }
 
   def interpretRevise(context: Context, s: Step): Context = {
-    context.initRevision(s)
     val o = context.getContextSection(s.table.get)
 
     context.makeAssignment(o, s.assignments.get, "revision")

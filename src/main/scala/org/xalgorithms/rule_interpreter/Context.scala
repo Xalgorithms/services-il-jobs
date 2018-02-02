@@ -2,7 +2,7 @@ package org.xalgorithms.rule_interpreter
 
 import org.xalgorithms.rule_interpreter.common.getValueByKeyString
 import org.xalgorithms.rule_interpreter.common.setKey
-import org.xalgorithms.rule_interpreter.udt.{Assignment, Step, Table}
+import org.xalgorithms.rule_interpreter.udt.{Assignment, Table}
 import play.api.libs.json._
 
 
@@ -25,7 +25,7 @@ import play.api.libs.json._
   *     ... all virtual tables (results of intermediate operations) ...
   *   },
   *   "revision": {
-  *     ... the final revised document (result of REVISE operation) ...
+  *     ... sequence of changes on the document ...
   *   }
   * }
   *
@@ -34,6 +34,7 @@ class Context(s: String = "") {
   private[this] var c: JsObject = Json.parse(s).as[JsObject]
 
   c = setEmptyVirtualTable()
+  c = setEmptyRevision()
 
   // Set empty $ object on context if doesn't exist
   private[this] def setEmptyVirtualTable(): JsObject = {
@@ -49,14 +50,16 @@ class Context(s: String = "") {
     (c \ "$").get
   }
 
-  def get(): JsObject = {
+  // Set empty 'revision' object on context if doesn't exist
+  private[this] def setEmptyRevision(): JsObject = {
+    if ((c \ "revision").isDefined) {
+      return c
+    }
+    c = setKey(c, "revision", Json.obj())
     c
   }
 
-  // Create "revision" on context with copy of the data
-  def initRevision(s: Step): JsObject = {
-    val section = getContextSection(s.table.get)
-    c = setKey(c, "revision", section)
+  def get(): JsObject = {
     c
   }
 
