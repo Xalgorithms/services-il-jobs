@@ -24,12 +24,23 @@ class ExecuteRules(cfg: ApplicationConfig) extends KafkaStreamingApplication(cfg
     (docJson, ruleJson)
   }
 
-  def applyRules(d: String, r: String): String = {
+  def applyRulesAndPrepareDocument(d: String, r: String): Document = {
     if (d != "" && r != "") {
-      val parsedDoc = interpreter.runAll(new Context(d), new Steps(r))
-      return extractRevision(parsedDoc.get)
+      val context = new Context(d)
+      val steps = new Steps(r)
+      val docId = (context.get \ "_id" \ "$oid").get.as[String]
+
+      val parsedDoc = interpreter.runAll(context, steps)
+      val revision = extractRevision(parsedDoc.get)
+      val v = Document.parse(revision)
+
+      v.append("_id", new ObjectId())
+      v.append("doc_id", docId)
+
+      return v
     }
-    ""
+
+    Document.parse(d)
   }
 
   def execute(): Unit = {
@@ -64,12 +75,7 @@ class ExecuteRules(cfg: ApplicationConfig) extends KafkaStreamingApplication(cfg
         extractValues(r)
       })
       .map({r =>
-        applyRules(r._1, r._2)
-      })
-      .map({doc =>
-        val v = Document.parse(doc)
-        v.append("_id", new ObjectId())
-        v
+        applyRulesAndPrepareDocument(r._1, r._2)
       })
       .transform({r =>
         val writeConfig = WriteConfig(Map("collection" -> "revision", "writeConcern.w" -> "majority"), Some(WriteConfig(ctx)))
