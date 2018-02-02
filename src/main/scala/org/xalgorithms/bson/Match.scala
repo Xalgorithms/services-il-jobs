@@ -4,7 +4,7 @@ import org.bson._
 import org.joda.time.DateTime
 
 
-class Match {
+class Match extends Serializable {
   def match_value(v: BsonValue): Boolean = v.getBsonType() match {
     case BsonType.BOOLEAN  => match_value(v.asInt32())
     case BsonType.DATE_TIME  => match_value(v.asDateTime())
