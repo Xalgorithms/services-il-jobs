@@ -1,7 +1,7 @@
 package org.xalgorithms.rule_interpreter
 
 import org.scalatest.{BeforeAndAfterEach, FunSuite}
-import play.api.libs.json.{JsNull, Json}
+import play.api.libs.json.{JsNull, JsString, Json}
 
 class commonTest extends FunSuite with BeforeAndAfterEach {
   override def beforeEach() {
@@ -29,7 +29,7 @@ class commonTest extends FunSuite with BeforeAndAfterEach {
         )
       )
     )
-    val actual = common.recursiveSetKeys(input, keys, newValue)
+    val actual = common.recursiveSetKeys(input, keys, JsString(newValue))
 
     assert(actual == expect)
   }
@@ -50,7 +50,7 @@ class commonTest extends FunSuite with BeforeAndAfterEach {
         )
       )
     )
-    val actual = common.recursiveSetKeys(input, keys, newValue)
+    val actual = common.recursiveSetKeys(input, keys, JsString(newValue))
 
     assert(actual == expect)
   }
@@ -69,7 +69,7 @@ class commonTest extends FunSuite with BeforeAndAfterEach {
         )
       )
     )
-    val actual = common.recursiveSetKeys(input, keys, newValue)
+    val actual = common.recursiveSetKeys(input, keys, JsString(newValue))
 
     assert(actual == expect)
   }

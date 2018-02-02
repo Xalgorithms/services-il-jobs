@@ -41,13 +41,13 @@ object common {
     case "gte" => x >= y
   }
 
-  def recursiveSetKeys(o: JsValue, keys: String, value: String): JsValue = {
+  def recursiveSetKeys(o: JsValue, keys: String, value: JsValue): JsValue = {
     val parts = keys.split("\\.")
 
     recursiveSetValueByKeys(o, parts, value)
   }
 
-  def recursiveSetValueByKeys(source: JsValue, path: Array[String], value: String): JsValue = {
+  def recursiveSetValueByKeys(source: JsValue, path: Array[String], value: JsValue): JsValue = {
     val p = path.head
     val next = (source \ p).getOrElse(JsNull)
 
@@ -59,7 +59,7 @@ object common {
     }
 
     if (path.length == 1) {
-      return setKey(source.as[JsObject], p, JsString(value))
+      return setKey(source.as[JsObject], p, value)
     }
 
     val res = recursiveSetValueByKeys(next, path.drop(1), value)

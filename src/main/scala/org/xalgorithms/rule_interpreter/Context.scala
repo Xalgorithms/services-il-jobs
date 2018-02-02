@@ -1,7 +1,7 @@
 package org.xalgorithms.rule_interpreter
 
 import org.xalgorithms.rule_interpreter.common.getValueByKeyString
-import org.xalgorithms.rule_interpreter.common.setKey
+import org.xalgorithms.rule_interpreter.common.{setKey, recursiveSetKeys}
 import org.xalgorithms.rule_interpreter.udt.{Assignment, Table}
 import play.api.libs.json._
 
@@ -107,7 +107,7 @@ class Context(s: String = "") {
     val value = getValueByKeyString(section, a.key.get)
     val obj = (context \ target).get.as[JsObject]
 
-    val res = setKey(obj, key, JsString(value))
+    val res = recursiveSetKeys(obj, key, JsString(value))
 
     setKey(context.as[JsObject], target, res)
   }
@@ -117,7 +117,7 @@ class Context(s: String = "") {
     val value = a.value.getOrElse("")
     val obj = (context \ target).get.as[JsObject]
 
-    val res = setKey(obj, key, JsString(value))
+    val res = recursiveSetKeys(obj, key, JsString(value))
 
     setKey(context.as[JsObject], target, res)
   }
@@ -127,7 +127,7 @@ class Context(s: String = "") {
     val value = a.value.getOrElse("")
     val obj = (context \ target).get.as[JsObject]
 
-    val res = setKey(obj, key, JsNumber(value.toInt))
+    val res = recursiveSetKeys(obj, key, JsNumber(value.toInt))
 
     setKey(context.as[JsObject], target, res)
   }
@@ -143,7 +143,7 @@ class Context(s: String = "") {
     val key = a.column.get
     val obj = (context \ target).get.as[JsObject]
 
-    val res = setKey(obj, key, JsNumber(value))
+    val res = recursiveSetKeys(obj, key, JsNumber(value))
 
     setKey(context.as[JsObject], target, res)
   }
