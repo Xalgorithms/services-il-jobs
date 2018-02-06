@@ -1,0 +1,59 @@
+[
+  {
+    "context": "revise_context",
+    "input" : {
+      "steps" : [
+        {
+          "name" : "revise",
+          "table" : { "type" : "reference", "section" : "tables", "key" : "items" },
+          "assignments" : [
+            { "column" : "a.b", "type" : "reference", "section" : "_context", "key" : "x.y.z" },
+            { "column" : "b", "type" : "reference", "section" : "_context", "key" : "p.q" },
+            { "column" : "c", "type" : "number", "value" : "2" },
+            { "column" : "d", "type" : "string", "value" : "s" }
+          ]
+        }
+      ]
+    },
+    "expects": {
+      "a": {
+        "b": "text 1"
+      },
+      "b": "text 2",
+      "c": 2,
+      "d": "s"
+    }
+  },
+  {
+    "context": "revise_context",
+    "input" : {
+      "steps" : [
+        {
+          "name" : "revise",
+          "table" : { "type" : "reference", "section" : "tables", "key" : "items" },
+          "assignments" : [
+            {
+              "column" : "a",
+              "type" : "function",
+              "name" : "multiply",
+              "args" : [
+                {
+                  "type" : "function",
+                  "name" : "add",
+                  "args" : [
+                    { "type" : "number", "value": "1" },
+                    { "type" : "number", "value" : "2" }
+                  ]
+                },
+                { "type" : "number", "value" : "2" }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "expects": {
+      "a": 6
+    }
+  }
+]

@@ -44,5 +44,31 @@
     },
     "job" : {
     }
+  },
+  "ExecuteRules" : {
+    "application" : {
+      "topics" : {
+        "input" : "xadf.compute.applicable",
+        "output" : "xadf.compute.revision"
+      },
+      "spark" : {
+        "spark.app.name" : "jobs-xa-execute-rules",
+        "spark.mongodb.input.uri": "mongodb://127.0.0.1/xadf.rules",
+        "spark.mongodb.output.uri": "mongodb://127.0.0.1/xadf.rules"
+      },
+      "kafka" : {
+        "source" : {
+          "metadata.broker.list" : "localhost:9092"
+        },
+        "sink" : {
+          "bootstrap.servers": "localhost:9092"
+        }
+      },
+      "mongo": "mongodb://127.0.0.1/xadf.rules",
+      "batch_duration" : "5s",
+      "checkpoint_dir" : "./streaming-checkpoints"
+    },
+    "job" : {
+    }
   }
 }
