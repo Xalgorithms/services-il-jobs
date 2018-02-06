@@ -15,3 +15,11 @@ libraryDependencies += "com.datastax.spark" %% "spark-cassandra-connector" % "2.
 libraryDependencies += "org.apache.spark" % "spark-sql_2.11" % "2.2.0"
 
 libraryDependencies += "io.spray" %%  "spray-json" % "1.3.3"
+
+libraryDependencies += "org.mongodb.spark" %% "mongo-spark-connector" % "2.2.0"
+
+libraryDependencies += "org.apache.spark" %% "spark-core" % "2.2.0"
+
+libraryDependencies += "org.apache.spark" %% "spark-sql" % "2.2.0"
+
+libraryDependencies += "org.apache.commons" % "commons-lang3" % "3.0"
