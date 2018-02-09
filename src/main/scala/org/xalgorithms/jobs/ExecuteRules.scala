@@ -24,23 +24,26 @@ class ExecuteRules(cfg: ApplicationConfig) extends KafkaStreamingApplication(cfg
     (docJson, ruleJson)
   }
 
-  def applyRulesAndPrepareDocument(d: String, r: String): Document = {
+  def applyRulesAndPrepareDocument(d: String, r: String): (Document, Document) = {
     if (d != "" && r != "") {
       val context = new Context(d)
       val steps = new Steps(r)
       val docId = (context.get \ "_id" \ "$oid").get.as[String]
 
-      val parsedDoc = interpreter.runAll(context, steps)
+      var records = ""
+      val parsedDoc = interpreter.runAll(context, steps, (r: String) => {
+        records = r
+      })
       val revision = extractRevision(parsedDoc.get)
       val v = Document.parse(revision)
 
       v.append("_id", new ObjectId())
       v.append("doc_id", docId)
 
-      return v
+      return (v, Document.parse(records))
     }
 
-    Document.parse(d)
+    (Document.parse(d), Document.parse(""))
   }
 
   def execute(): Unit = {
@@ -77,10 +80,19 @@ class ExecuteRules(cfg: ApplicationConfig) extends KafkaStreamingApplication(cfg
       .map({r =>
         applyRulesAndPrepareDocument(r._1, r._2)
       })
-      .transform({r =>
-        val writeConfig = WriteConfig(Map("collection" -> "revision", "writeConcern.w" -> "majority"), Some(WriteConfig(ctx)))
-        r.saveToMongoDB(writeConfig)
-        r
+      .transform({rdd =>
+        val docs = rdd.map({t =>
+          t._1
+        })
+        val records = rdd.map({t =>
+          t._2
+        })
+        val docsWriteConfig = WriteConfig(Map("collection" -> "revision", "writeConcern.w" -> "majority"), Some(WriteConfig(ctx)))
+        docs.saveToMongoDB(docsWriteConfig)
+
+        val recordsWriteConfig = WriteConfig(Map("collection" -> "records", "writeConcern.w" -> "majority"), Some(WriteConfig(ctx)))
+        records.saveToMongoDB(recordsWriteConfig)
+        docs
       })
       .map({r =>
         r.getObjectId("_id").toString
