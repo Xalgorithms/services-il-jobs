@@ -11,7 +11,7 @@ object interpreter {
     val steps = s.get
 
     val docId = (c.get \ "_id" \ "$oid").getOrElse(JsString("")).as[String]
-    val recorder = new Recorder(docId, fn == null)
+    val recorder = new Recorder(docId, fn != null)
 
     steps.foreach {s =>
       res = run(c, s)

@@ -4,7 +4,7 @@ import play.api.libs.json._
 import org.xalgorithms.rule_interpreter.common.setKey
 
 class Recorder(document_id: String, active: Boolean) {
-  private var steps = Json.obj() //Map[String, Seq[JsObject]]()
+  private var steps = Json.obj()
 
   def record(name: String, before: Context, after: Context): Unit = {
     if (active == false) {
