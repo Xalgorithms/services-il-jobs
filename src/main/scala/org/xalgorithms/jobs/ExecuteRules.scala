@@ -28,7 +28,7 @@ class ExecuteRules(cfg: ApplicationConfig) extends KafkaStreamingApplication(cfg
     if (d != "" && r != "") {
       val context = new Context(d)
       val steps = new Steps(r)
-      val docId = (context.get \ "_id" \ "$oid").get.as[String]
+      val docId = (context.get \ "_id").get.as[String]
 
       var records = ""
       val parsedDoc = interpreter.runAll(context, steps, (r: String) => {
@@ -64,10 +64,10 @@ class ExecuteRules(cfg: ApplicationConfig) extends KafkaStreamingApplication(cfg
           val rule_id = ids._2
 
           val doc_rd = MongoSpark.load(ctx, docReadConfig)
-          val aggregatedDocRdd = doc_rd.withPipeline(Seq(Document.parse("{ $match: { _id : { $oid : '" + document_id + "' } } }")))
+          val aggregatedDocRdd = doc_rd.withPipeline(Seq(Document.parse("{ $match: { _id : '" + document_id + "' } }")))
 
           val rule_rd = MongoSpark.load(ctx, ruleReadConfig)
-          val aggregatedRuleRdd = rule_rd.withPipeline(Seq(Document.parse("{ $match: { _id : { $oid : '" + rule_id + "' } } }")))
+          val aggregatedRuleRdd = rule_rd.withPipeline(Seq(Document.parse("{ $match: { _id : '" + rule_id + "' } }")))
 
           (aggregatedDocRdd.collect(), aggregatedRuleRdd.collect())
         })
@@ -81,18 +81,18 @@ class ExecuteRules(cfg: ApplicationConfig) extends KafkaStreamingApplication(cfg
         applyRulesAndPrepareDocument(r._1, r._2)
       })
       .transform({rdd =>
-        val docs = rdd.map({t =>
+        val revisions = rdd.map({t =>
           t._1
         })
         val records = rdd.map({t =>
           t._2
         })
-        val docsWriteConfig = WriteConfig(Map("collection" -> "revision", "writeConcern.w" -> "majority"), Some(WriteConfig(ctx)))
-        docs.saveToMongoDB(docsWriteConfig)
+        val revisionsWriteConfig = WriteConfig(Map("collection" -> "revision", "writeConcern.w" -> "majority", "replaceDocument" -> "false"), Some(WriteConfig(ctx)))
+        revisions.saveToMongoDB(revisionsWriteConfig)
 
         val recordsWriteConfig = WriteConfig(Map("collection" -> "records", "writeConcern.w" -> "majority"), Some(WriteConfig(ctx)))
         records.saveToMongoDB(recordsWriteConfig)
-        docs
+        revisions
       })
       .map({r =>
         r.getObjectId("_id").toString
