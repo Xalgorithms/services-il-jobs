@@ -60,80 +60,80 @@ class Match {
 
 class Equals(value: String) extends Match {
   override def match_value(v: BsonInt32): Boolean = {
-    value.toInt == v.getValue()
+    v.getValue() == value.toInt
   }
 
   override def match_value(v: BsonInt64): Boolean = {
-    value.toInt == v.getValue()
+    v.getValue() == value.toInt
   }
 
   override def match_value(v: BsonDouble): Boolean = {
-    value.toDouble == v.getValue()
+    v.getValue() == value.toDouble
   }
 
   override def match_value(v: BsonString): Boolean = {
-    value == v.getValue()
+    v.getValue() == value
   }
 
   override def match_value(v: BsonTimestamp): Boolean = {
-    value.toInt == v.getTime()
+    v.getTime() == value.toInt
   }
 
   override def match_value(v: BsonDateTime): Boolean = {
-    new DateTime(value).isEqual(new DateTime(v.getValue))
+    new DateTime(v.getValue).isEqual(new DateTime(value))
   }
 }
 
 class LessThan(value: String) extends Match {
   override def match_value(v: BsonInt32): Boolean = {
-    value.toInt < v.getValue()
+    v.getValue() < value.toInt
   }
 
   override def match_value(v: BsonInt64): Boolean = {
-    value.toInt < v.getValue()
+    v.getValue() < value.toInt
   }
 
   override def match_value(v: BsonDouble): Boolean = {
-    value.toDouble < v.getValue()
+    v.getValue() < value.toDouble
   }
 
   override def match_value(v: BsonString): Boolean = {
-    value < v.getValue()
+    v.getValue() < value
   }
 
   override def match_value(v: BsonTimestamp): Boolean = {
-    value.toInt < v.getTime()
+    v.getTime() < value.toInt
   }
 
   override def match_value(v: BsonDateTime): Boolean = {
-    new DateTime(value).isBefore(new DateTime(v.getValue))
+    new DateTime(v.getValue()).isBefore(new DateTime(value))
   }
 }
 
 class LessThanEquals(value: String) extends Match {
   override def match_value(v: BsonInt32): Boolean = {
-    value.toInt <= v.getValue()
+    v.getValue() <= value.toInt
   }
 
   override def match_value(v: BsonInt64): Boolean = {
-    value.toInt <= v.getValue()
+    v.getValue() <= value.toInt
   }
 
   override def match_value(v: BsonDouble): Boolean = {
-    value.toDouble <= v.getValue()
+    v.getValue() <= value.toDouble
   }
 
   override def match_value(v: BsonString): Boolean = {
-    value <= v.getValue()
+    v.getValue() <= value
   }
 
   override def match_value(v: BsonTimestamp): Boolean = {
-    value.toInt <= v.getTime()
+    v.getTime() <= value.toInt
   }
 
   override def match_value(v: BsonDateTime): Boolean = {
-    val dt0 = new DateTime(value)
-    val dt1 = new DateTime(v.getValue)
+    val dt0 = new DateTime(v.getValue())
+    val dt1 = new DateTime(value)
 
     dt0.isBefore(dt1) || dt0.isEqual(dt1)
   }
@@ -141,54 +141,54 @@ class LessThanEquals(value: String) extends Match {
 
 class GreaterThan(value: String) extends Match {
   override def match_value(v: BsonInt32): Boolean = {
-    value.toInt > v.getValue()
+    v.getValue() > value.toInt
   }
 
   override def match_value(v: BsonInt64): Boolean = {
-    value.toInt > v.getValue()
+    v.getValue() > value.toInt
   }
 
   override def match_value(v: BsonDouble): Boolean = {
-    value.toDouble > v.getValue()
+    v.getValue() > value.toDouble
   }
 
   override def match_value(v: BsonString): Boolean = {
-    value > v.getValue()
+    v.getValue() > value
   }
 
   override def match_value(v: BsonTimestamp): Boolean = {
-    value.toInt > v.getTime()
+    v.getTime() > value.toInt
   }
 
   override def match_value(v: BsonDateTime): Boolean = {
-    new DateTime(value).isAfter(new DateTime(v.getValue))
+    new DateTime(v.getValue()).isAfter(new DateTime(value))
   }
 }
 
 class GreaterThanEquals(value: String) extends Match {
   override def match_value(v: BsonInt32): Boolean = {
-    value.toInt >= v.getValue()
+    v.getValue() >= value.toInt
   }
 
   override def match_value(v: BsonInt64): Boolean = {
-    value.toInt >= v.getValue()
+    v.getValue() >= value.toInt
   }
 
   override def match_value(v: BsonDouble): Boolean = {
-    value.toDouble >= v.getValue()
+    v.getValue() >= value.toDouble
   }
 
   override def match_value(v: BsonString): Boolean = {
-    value >= v.getValue()
+    v.getValue() >= value
   }
 
   override def match_value(v: BsonTimestamp): Boolean = {
-    value.toInt >= v.getTime()
+    v.getTime() >= value.toInt
   }
 
   override def match_value(v: BsonDateTime): Boolean = {
-    val dt0 = new DateTime(value)
-    val dt1 = new DateTime(v.getValue)
+    val dt0 = new DateTime(v.getValue())
+    val dt1 = new DateTime(value)
 
     dt0.isAfter(dt1) || dt0.isEqual(dt1)
   }
