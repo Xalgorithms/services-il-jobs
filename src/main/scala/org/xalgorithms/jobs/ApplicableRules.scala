@@ -138,8 +138,10 @@ class ApplicableRules(cfg: ApplicationConfig) extends KafkaSparkStreamingApplica
         // filter on matching rule ids -- tup._1 has the rule_id
         // from the input stream; tup._2 from the whens table
         .filter(tup => tup._1._2 == tup._2._1)
-        .filter(tup => tup._2._2.matches_any(tup._1._3.find()))
-        .map { tup => s"${tup._1._1}:${tup._1._2}" }
+        .map(tup => s"${tup._1._1}:${tup._1._2}" -> tup._2._2.matches_any(tup._1._3.find()))
+        .reduceByKey((a: Boolean, b: Boolean) => a && b)
+        .filter(_._2)
+        .map(_._1)
       // => "document_id:rule_id"
     })
   }
