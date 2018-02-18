@@ -20,4 +20,13 @@ class FindSpec extends FlatSpec with Matchers {
     Find(doc, "b") shouldBe new BsonString("3")
     Find(doc, "c") shouldBe new BsonInt32(1)
   }
+
+  it should "yield null if the path does not exist" in {
+    val doc = BsonDocument.parse("{}")
+    Find(doc, "a") shouldBe null
+    Find(doc, "a.aa") shouldBe null
+    Find(doc, "a.ab") shouldBe null
+    Find(doc, "b") shouldBe null
+    Find(doc, "c") shouldBe null
+  }
 }
