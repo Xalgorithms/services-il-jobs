@@ -2,7 +2,7 @@ package org.xalgorithms.jobs
 
 import org.xalgorithms.apps._
 
-class ApplicableRules(cfg: ApplicationConfig) extends KafkaStreamingApplication(cfg) {
+class ApplicableRules(cfg: ApplicationConfig) extends KafkaSparkStreamingApplication(cfg) {
   def execute(): Unit = {
     with_context(cfg, { (ctx, sctx, input) =>
       input.map { s => s.reverse }

@@ -18,7 +18,7 @@ import org.apache.spark.streaming.kafka.KafkaUtils
 
 
 // The job might be run on one of the executors, hence it should be serializable
-class KafkaStreamingApplication(cfg: ApplicationConfig) extends Serializable {
+class KafkaSparkStreamingApplication(cfg: ApplicationConfig) extends Serializable {
   def spark_cfg: Map[String, String] = cfg.spark
   def batch_duration: FiniteDuration = cfg.batch_duration
   def checkpoint_dir: String = cfg.checkpoint_dir

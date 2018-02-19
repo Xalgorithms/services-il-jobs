@@ -9,7 +9,7 @@ import org.bson.types.ObjectId
 import org.xalgorithms.rule_interpreter.{Context, Steps, interpreter}
 import org.xalgorithms.rule_interpreter.utils.{documentToContext, extractRevision, extractSteps}
 
-class ExecuteRules(cfg: ApplicationConfig) extends KafkaStreamingApplication(cfg) {
+class ExecuteRules(cfg: ApplicationConfig) extends KafkaSparkStreamingApplication(cfg) {
   def extractValues(t: (Array[Document], Array[Document])): (String, String) = {
     var docJson = ""
     var ruleJson = ""
