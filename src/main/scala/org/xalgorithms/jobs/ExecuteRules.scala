@@ -3,23 +3,17 @@ package org.xalgorithms.jobs
 
 import com.mongodb.spark._
 import com.mongodb.spark.config.{ReadConfig, WriteConfig}
+import org.apache.spark.streaming.dstream.ConstantInputDStream
 import org.xalgorithms.apps._
-import org.bson.Document
+import org.bson.{BsonDocument, Document}
 import org.bson.types.ObjectId
 import org.xalgorithms.rule_interpreter.{Context, Steps, interpreter}
 import org.xalgorithms.rule_interpreter.utils.{documentToContext, extractRevision, extractSteps}
 
 class ExecuteRules(cfg: ApplicationConfig) extends KafkaSparkStreamingApplication(cfg) {
-  def extractValues(t: (Array[Document], Array[Document])): (String, String) = {
-    var docJson = ""
-    var ruleJson = ""
-
-    if (t._1.length > 0) {
-      docJson = documentToContext(t._1(0).toJson)
-    }
-    if (t._2.length > 0) {
-      ruleJson = extractSteps(t._2(0).toJson)
-    }
+  def extractValues(t: (BsonDocument, BsonDocument)): (String, String) = {
+    val docJson = documentToContext(t._1.toJson)
+    val ruleJson = extractSteps(t._2.toJson)
 
     (docJson, ruleJson)
   }
@@ -36,8 +30,9 @@ class ExecuteRules(cfg: ApplicationConfig) extends KafkaSparkStreamingApplicatio
       })
       val revision = extractRevision(parsedDoc.get)
       val v = Document.parse(revision)
+      val id = new ObjectId()
 
-      v.append("_id", new ObjectId())
+      v.append("_id", id)
       v.append("doc_id", docId)
 
       return (v, Document.parse(records))
@@ -48,46 +43,45 @@ class ExecuteRules(cfg: ApplicationConfig) extends KafkaSparkStreamingApplicatio
 
   def execute(): Unit = {
     with_context(cfg, {(ctx, sctx, input) =>
-      input.map({id_pair =>
-        val parts = id_pair.split(":")
-        (parts(0), parts(1))
-      }).transform({rdd =>
-        val docReadConfig = ReadConfig(Map("collection" -> "documents", "readPreference.name" -> "secondaryPreferred"), Some(ReadConfig(ctx)))
-        val ruleReadConfig = ReadConfig(Map("collection" -> "rules", "readPreference.name" -> "secondaryPreferred"), Some(ReadConfig(ctx)))
+      val docReadConfig = ReadConfig(Map("collection" -> "documents", "readPreference.name" -> "secondaryPreferred"), Some(ReadConfig(ctx)))
+      val ruleReadConfig = ReadConfig(Map("collection" -> "rules", "readPreference.name" -> "secondaryPreferred"), Some(ReadConfig(ctx)))
 
-        val count = rdd.count()
+      val docs_stream = new ConstantInputDStream(sctx, MongoSpark.load[BsonDocument](ctx, docReadConfig))
+        .map(doc => doc.getString("public_id").getValue() -> doc)
 
-        val tuples = rdd.take(count.toInt)
+      val rules_stream = new ConstantInputDStream(sctx, MongoSpark.load[BsonDocument](ctx, ruleReadConfig))
+        .map(doc => doc.getString("public_id").getValue() -> doc)
 
-        val res = tuples.map({ids =>
-          val document_id = ids._1
-          val rule_id = ids._2
+      val ids_stream = input.map { doc_rule_id =>
+        val ids = doc_rule_id.split(":")
+        ids(0) -> ids(1)
+      }
+      // => ((document_id), (rule_id))
 
-          val doc_rd = MongoSpark.load(ctx, docReadConfig)
-          val aggregatedDocRdd = doc_rd.withPipeline(Seq(Document.parse("{ $match: { _id : '" + document_id + "' } }")))
+      val combined_docs_stream = ids_stream.join(docs_stream)
+        .filter(_._2._2 != null)
+        .map(tup => Tuple2(tup._2._1, tup._1 -> tup._2._2))
+      // => (rule_id, (document_id, document))
 
-          val rule_rd = MongoSpark.load(ctx, ruleReadConfig)
-          val aggregatedRuleRdd = rule_rd.withPipeline(Seq(Document.parse("{ $match: { _id : '" + rule_id + "' } }")))
+      val combined_docs_and_rules_stream = combined_docs_stream.join(rules_stream)
+        .filter(_._2._2 != null)
+        .map(tup => Tuple4(tup._2._1._1, tup._1, tup._2._1._2, tup._2._2))
+      // => (document_id, rule_id, document, rule))
 
-          (aggregatedDocRdd.collect(), aggregatedRuleRdd.collect())
-        })
-
-        ctx.parallelize(res)
+      combined_docs_and_rules_stream.map({tup =>
+        extractValues(tup._3, tup._4)
       })
-      .map({r =>
-        extractValues(r)
-      })
-      .map({r =>
-        applyRulesAndPrepareDocument(r._1, r._2)
+      .map({t =>
+        applyRulesAndPrepareDocument(t._1, t._2)
       })
       .transform({rdd =>
+        val revisionsWriteConfig = WriteConfig(Map("collection" -> "revision", "writeConcern.w" -> "majority", "replaceDocument" -> "false"), Some(WriteConfig(ctx)))
         val revisions = rdd.map({t =>
           t._1
         })
         val records = rdd.map({t =>
           t._2
         })
-        val revisionsWriteConfig = WriteConfig(Map("collection" -> "revision", "writeConcern.w" -> "majority", "replaceDocument" -> "false"), Some(WriteConfig(ctx)))
         revisions.saveToMongoDB(revisionsWriteConfig)
 
         val recordsWriteConfig = WriteConfig(Map("collection" -> "records", "writeConcern.w" -> "majority"), Some(WriteConfig(ctx)))
