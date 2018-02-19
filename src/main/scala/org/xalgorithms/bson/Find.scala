@@ -8,12 +8,11 @@ object Find {
       return doc.get(path.head)
     }
 
-    val ch_doc = doc.getDocument(path.head)
-    if (null == ch_doc) {
-      return null
+    if (doc.isDocument(path.head)) {
+      return apply(doc.getDocument(path.head), path.tail)
     }
 
-    return apply(ch_doc, path.tail)
+    null
   }
 
   def apply(doc: BsonDocument, path: String): BsonValue = {
