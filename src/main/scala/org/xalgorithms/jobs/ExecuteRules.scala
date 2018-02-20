@@ -5,7 +5,7 @@ import com.mongodb.spark._
 import com.mongodb.spark.config.ReadConfig
 import org.apache.spark.streaming.dstream.ConstantInputDStream
 import org.xalgorithms.apps._
-import org.bson.{BsonDocument, Document}
+import org.bson.{BsonDocument, BsonString}
 import org.bson.types.ObjectId
 import org.xalgorithms.rule_interpreter.{Context, Steps, interpreter}
 import org.xalgorithms.rule_interpreter.utils.{documentToContext, extractRevision, extractSteps}
@@ -29,11 +29,10 @@ class ExecuteRules(cfg: ApplicationConfig) extends KafkaMongoSparkStreamingAppli
         records = r
       })
       val revision = extractRevision(parsedDoc.get)
-      val v = Document.parse(revision)
+      val v = BsonDocument.parse(revision)
       val id = new ObjectId()
-
-      v.append("public_id", id.toHexString)
-      v.append("doc_id", docId)
+      v.append("public_id", new BsonString(id.toHexString))
+      v.append("doc_id", new BsonString(docId))
 
       return (v.toJson, records)
     }
