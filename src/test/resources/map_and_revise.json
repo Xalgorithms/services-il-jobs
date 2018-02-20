@@ -1,0 +1,26 @@
+[
+  {
+    "context": "map_and_revise_context",
+    "input" : {
+      "steps" : [
+        {
+          "name" : "map",
+          "table" : { "type" : "reference", "section" : "tables", "key" : "items" },
+          "assignments" : [
+            { "column" : "a", "type" : "reference", "section" : "_context", "key" : "x.y.z" }
+          ]
+        },
+        {
+          "name" : "revise",
+          "table" : { "type" : "reference", "section" : "_virtual", "key" : "items" },
+          "assignments" : [
+            { "column" : "b", "type" : "reference", "section" : "_context", "key" : "a" }
+          ]
+        }
+      ]
+    },
+    "expects": {
+      "b": "text 1"
+    }
+  }
+]

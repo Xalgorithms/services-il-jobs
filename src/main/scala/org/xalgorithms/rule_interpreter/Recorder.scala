@@ -19,7 +19,7 @@ class Recorder(document_id: String, active: Boolean) {
       steps = setKey(steps, name, firstRecords)
     } else {
       val r = records.get.as[JsArray]
-      r :+ after.get
+      r :+ afterRenamed
       steps = setKey(steps, name, r)
     }
   }

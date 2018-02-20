@@ -24,11 +24,10 @@ class ExecuteRules(cfg: ApplicationConfig) extends KafkaMongoSparkStreamingAppli
       val steps = new Steps(r)
       val docId = (context.get \ "_id").get.as[String]
 
-      var records = ""
-      val parsedDoc = interpreter.runAll(context, steps, (r: String) => {
-        records = r
-      })
-      val revision = extractRevision(parsedDoc.get)
+      val result = interpreter.runAll(context, steps, true)
+      val revision = extractRevision(result._1.get)
+      val records = result._2
+
       val v = BsonDocument.parse(revision)
       val id = new ObjectId()
       v.append("public_id", new BsonString(id.toHexString))
