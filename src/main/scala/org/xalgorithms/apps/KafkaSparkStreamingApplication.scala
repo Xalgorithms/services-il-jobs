@@ -10,7 +10,6 @@ import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.spark.SparkConf
 import org.apache.spark.SparkContext
-import org.apache.spark.TaskContext
 import org.apache.spark.streaming.Seconds
 import org.apache.spark.streaming.StreamingContext
 import org.apache.spark.streaming.dstream.DStream
@@ -104,8 +103,7 @@ class KafkaSink(@transient private val st: DStream[String]) extends Serializable
     st.foreachRDD { rdd =>
       rdd.foreachPartition { recs =>
         val pr = maybeMakeProducer(cfg)
-        val tctx = TaskContext.get
-        
+
         val meta = recs.map { rec =>
           // since we sling DStream[String] and Producer[String,
           // String], then our records are Strings

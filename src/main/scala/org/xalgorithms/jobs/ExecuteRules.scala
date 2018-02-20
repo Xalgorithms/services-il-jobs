@@ -2,7 +2,7 @@ package org.xalgorithms.jobs
 
 
 import com.mongodb.spark._
-import com.mongodb.spark.config.{ReadConfig, WriteConfig}
+import com.mongodb.spark.config.ReadConfig
 import org.apache.spark.streaming.dstream.ConstantInputDStream
 import org.xalgorithms.apps._
 import org.bson.{BsonDocument, Document}
@@ -10,7 +10,7 @@ import org.bson.types.ObjectId
 import org.xalgorithms.rule_interpreter.{Context, Steps, interpreter}
 import org.xalgorithms.rule_interpreter.utils.{documentToContext, extractRevision, extractSteps}
 
-class ExecuteRules(cfg: ApplicationConfig) extends KafkaSparkStreamingApplication(cfg) {
+class ExecuteRules(cfg: ApplicationConfig) extends KafkaMongoSparkStreamingApplication(cfg) {
   def extractValues(t: (BsonDocument, BsonDocument)): (String, String) = {
     val docJson = documentToContext(t._1.toJson)
     val ruleJson = extractSteps(t._2.toJson)
@@ -18,7 +18,7 @@ class ExecuteRules(cfg: ApplicationConfig) extends KafkaSparkStreamingApplicatio
     (docJson, ruleJson)
   }
 
-  def applyRulesAndPrepareDocument(d: String, r: String): (Document, Document) = {
+  def applyRulesAndPrepareDocument(d: String, r: String): (String, String) = {
     if (d != "" && r != "") {
       val context = new Context(d)
       val steps = new Steps(r)
@@ -32,13 +32,13 @@ class ExecuteRules(cfg: ApplicationConfig) extends KafkaSparkStreamingApplicatio
       val v = Document.parse(revision)
       val id = new ObjectId()
 
-      v.append("_id", id)
+      v.append("public_id", id.toHexString)
       v.append("doc_id", docId)
 
-      return (v, Document.parse(records))
+      return (v.toJson, records)
     }
 
-    (Document.parse(d), Document.parse(""))
+    (d, "")
   }
 
   def execute(): Unit = {
@@ -74,22 +74,8 @@ class ExecuteRules(cfg: ApplicationConfig) extends KafkaSparkStreamingApplicatio
       .map({t =>
         applyRulesAndPrepareDocument(t._1, t._2)
       })
-      .transform({rdd =>
-        val revisionsWriteConfig = WriteConfig(Map("collection" -> "revision", "writeConcern.w" -> "majority", "replaceDocument" -> "false"), Some(WriteConfig(ctx)))
-        val revisions = rdd.map({t =>
-          t._1
-        })
-        val records = rdd.map({t =>
-          t._2
-        })
-        revisions.saveToMongoDB(revisionsWriteConfig)
-
-        val recordsWriteConfig = WriteConfig(Map("collection" -> "records", "writeConcern.w" -> "majority"), Some(WriteConfig(ctx)))
-        records.saveToMongoDB(recordsWriteConfig)
-        revisions
-      })
       .map({r =>
-        r.getObjectId("_id").toString
+        r._1
       })
     })
   }
