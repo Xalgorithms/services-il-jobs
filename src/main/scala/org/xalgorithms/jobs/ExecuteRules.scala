@@ -73,7 +73,7 @@ class ExecuteRules(cfg: ApplicationConfig) extends KafkaMongoSparkStreamingAppli
         applyRulesAndPrepareDocument(t._1, t._2)
       })
       .map({r =>
-        r._1
+        r
       })
     })
   }

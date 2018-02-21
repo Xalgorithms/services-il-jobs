@@ -2,6 +2,9 @@ package org.xalgorithms.apps
 
 import java.lang.management.ManagementFactory
 
+import com.mongodb.client.MongoCollection
+import com.mongodb.spark.MongoConnector
+import com.mongodb.spark.config.WriteConfig
 import kafka.serializer.StringDecoder
 
 import scala.collection.mutable
@@ -14,15 +17,19 @@ import org.apache.spark.streaming.Seconds
 import org.apache.spark.streaming.StreamingContext
 import org.apache.spark.streaming.dstream.DStream
 import org.apache.spark.streaming.kafka.KafkaUtils
+import org.bson.Document
+import scala.collection.JavaConverters._
 
 
 // The job might be run on one of the executors, hence it should be serializable
-class KafkaSparkStreamingApplication(cfg: ApplicationConfig) extends Serializable {
+abstract class BaseApplication(cfg: ApplicationConfig) extends Serializable {
+  type T
+
   def spark_cfg: Map[String, String] = cfg.spark
   def batch_duration: FiniteDuration = cfg.batch_duration
   def checkpoint_dir: String = cfg.checkpoint_dir
 
-  def with_context(scfg: ApplicationConfig, fn: (SparkContext, StreamingContext, DStream[String]) => DStream[String]): Unit = {
+  def with_context(scfg: ApplicationConfig, fn: (SparkContext, StreamingContext, DStream[String]) => DStream[T]): Unit = {
     val isIDE = {
       ManagementFactory.getRuntimeMXBean.getInputArguments.toString.contains("IntelliJ IDEA")
     }
@@ -43,11 +50,30 @@ class KafkaSparkStreamingApplication(cfg: ApplicationConfig) extends Serializabl
 
     val output = fn(ctx, sctx, input)
 
-    import KafkaSink._
-    output.send(scfg.kafka_sink, scfg.topic_output)
+    act(output, scfg.kafka_sink, scfg.topic_output, ctx)
 
     sctx.start()
     sctx.awaitTermination()
+  }
+
+  def act(output: DStream[T], sink: Map[String, String], topic: String, ctx: SparkContext = null): Unit
+}
+
+class KafkaSparkStreamingApplication(cfg: ApplicationConfig) extends BaseApplication(cfg: ApplicationConfig) {
+  type T = String
+
+  def act(output: DStream[T], sink: Map[String, String], topic: String, ctx: SparkContext = null): Unit = {
+    import KafkaSink._
+    output.send(sink, topic)
+  }
+}
+
+class KafkaMongoSparkStreamingApplication(cfg: ApplicationConfig) extends BaseApplication(cfg: ApplicationConfig) {
+  type T = (String, String)
+
+  def act(output: DStream[T], sink: Map[String, String], topic: String, ctx: SparkContext): Unit = {
+    import KafkaMongoSink._
+    output.send(sink, topic, ctx)
   }
 }
 
@@ -96,26 +122,8 @@ object KafkaSource {
   def apply(cfg: Map[String, String]): KafkaSource = new KafkaSource(cfg)
 }
 
-class KafkaSink(@transient private val st: DStream[String]) extends Serializable {
+class KafkaSinkBase[T](@transient private val st: DStream[T]) extends Serializable {
   private val Producers = mutable.Map[Map[String, Object], KafkaProducer[String, String]]()
-
-  def send(cfg: Map[String, String], topic: String): Unit = {
-    st.foreachRDD { rdd =>
-      rdd.foreachPartition { recs =>
-        val pr = maybeMakeProducer(cfg)
-
-        val meta = recs.map { rec =>
-          // since we sling DStream[String] and Producer[String,
-          // String], then our records are Strings
-          pr.send(new ProducerRecord(topic, rec))
-        }.toList
-
-        meta.foreach { d => d.get() }
-      }
-    }
-  }
-
-  import scala.collection.JavaConverters._
 
   def maybeMakeProducer(cfg: Map[String, Object]): KafkaProducer[String, String] = {
     val default_cfg = Map(
@@ -136,10 +144,61 @@ class KafkaSink(@transient private val st: DStream[String]) extends Serializable
   }
 }
 
+class KafkaSink(@transient private val st: DStream[String]) extends KafkaSinkBase(st) {
+  def send(cfg: Map[String, String], topic: String): Unit = {
+    st.foreachRDD { rdd =>
+      rdd.foreachPartition { recs =>
+        val pr = maybeMakeProducer(cfg)
+
+        val meta = recs.map { rec =>
+          // since we sling DStream[String] and Producer[String,
+          // String], then our records are Strings
+          pr.send(new ProducerRecord(topic, rec))
+        }.toList
+
+        meta.foreach { d => d.get() }
+      }
+    }
+  }
+
+
+}
+
 object KafkaSink {
   import scala.language.implicitConversions
 
   implicit def createKafkaSink(st: DStream[String]): KafkaSink = {
     new KafkaSink(st)
+  }
+}
+
+class KafkaMongoSink(@transient private val st: DStream[(String, String)]) extends KafkaSinkBase(st) {
+  def send(cfg: Map[String, String], topic: String, ctx: SparkContext): Unit = {
+    val writeConfig = WriteConfig(Map("collection" -> "revision", "writeConcern.w" -> "majority", "replaceDocument" -> "false"), Some(WriteConfig(ctx)))
+    val mongoConnector = MongoConnector(writeConfig.asOptions)
+
+    st.foreachRDD { rdd =>
+      rdd.foreachPartition (recs => if(recs.nonEmpty) {
+        val pr = maybeMakeProducer(cfg)
+
+        mongoConnector.withCollectionDo(writeConfig, { collection: MongoCollection[Document] =>
+          recs.grouped(writeConfig.maxBatchSize).foreach({ batch =>
+            collection.insertMany(batch.toList.map({rec =>
+              val doc = Document.parse(rec._1)
+              pr.send(new ProducerRecord(topic, doc.getString("public_id")))
+              doc
+            }).asJava)
+          })
+        })
+      })
+    }
+  }
+}
+
+object KafkaMongoSink {
+  import scala.language.implicitConversions
+
+  implicit def createKafkaMongoSink(st: DStream[(String, String)]): KafkaMongoSink = {
+    new KafkaMongoSink(st)
   }
 }
