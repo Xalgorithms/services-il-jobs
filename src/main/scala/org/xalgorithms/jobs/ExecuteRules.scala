@@ -22,7 +22,7 @@ class ExecuteRules(cfg: ApplicationConfig) extends KafkaMongoSparkStreamingAppli
     if (d != "" && r != "") {
       val context = new Context(d)
       val steps = new Steps(r)
-      val docId = (context.get \ "_id").get.as[String]
+      val docId = (context.get \ "public_id").get.as[String]
 
       val result = interpreter.runAll(context, steps, true)
       val revision = extractRevision(result._1.get)
