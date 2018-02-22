@@ -6,24 +6,21 @@ import org.xalgorithms.rule_interpreter.common.{getValueByKeyString, applyOperat
 import play.api.libs.json._
 
 object interpreter {
-  def runAll(c: Context, s: Steps, fn: (String) => Unit = null): Context = {
+  def runAll(c: Context, s: Steps, active: Boolean = false): (Context, String) = {
     var res = c
     val steps = s.get
 
     val docId = (c.get \ "_id" \ "$oid").getOrElse(JsString("")).as[String]
-    val recorder = new Recorder(docId, fn != null)
+    val recorder = new Recorder(docId, active)
 
     steps.foreach {s =>
       res = run(c, s)
       recorder.record(s.name, c, res)
     }
 
-    if (fn != null) {
-      val json = Json.stringify(recorder.getAll)
-      fn(json)
-    }
+    val history = Json.stringify(recorder.getAll)
 
-    res
+    (res, history)
   }
 
   def run(c: Context, s: Step): Context = {
