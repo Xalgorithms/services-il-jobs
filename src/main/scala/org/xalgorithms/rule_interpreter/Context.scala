@@ -62,12 +62,14 @@ class Context(s: String = "", tables: List[(String, String)] = List.empty) {
 
   private[this] def setInitialTables(tables: List[(String, String)]): JsObject = {
     tables.foreach({t =>
-      val table_id = t._1
       val table_string = t._2
 
       if (table_string != "") {
+        val table_id = t._1
         val table = Json.parse(table_string).as[JsObject]
-        setNewTable(table_id, table)
+        val name = (table \ "name")
+        val key = if (name.isDefined) name.get.as[String] else table_id
+        setNewTable(key, table)
       }
     })
 
