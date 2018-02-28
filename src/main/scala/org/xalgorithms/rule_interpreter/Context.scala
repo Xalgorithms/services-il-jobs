@@ -30,11 +30,12 @@ import play.api.libs.json._
   * }
   *
   */
-class Context(s: String = "") {
+class Context(s: String = "", tables: List[(String, String)] = List.empty) {
   private[this] var c: JsObject = Json.parse(s).as[JsObject]
 
   c = setEmptyVirtualTable()
   c = setEmptyRevision()
+  c = setInitialTables(tables)
 
   // Set empty $ object on context if doesn't exist
   private[this] def setEmptyVirtualTable(): JsObject = {
@@ -56,6 +57,20 @@ class Context(s: String = "") {
       return c
     }
     c = setKey(c, "revision", Json.obj())
+    c
+  }
+
+  private[this] def setInitialTables(tables: List[(String, String)]): JsObject = {
+    tables.foreach({t =>
+      val table_id = t._1
+      val table_string = t._2
+
+      if (table_string != "") {
+        val table = Json.parse(table_string).as[JsObject]
+        setNewTable(table_id, table)
+      }
+    })
+
     c
   }
 
