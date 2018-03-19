@@ -29,7 +29,7 @@ abstract class BaseApplication(cfg: ApplicationConfig) extends Serializable {
   def batch_duration: FiniteDuration = cfg.batch_duration
   def checkpoint_dir: String = cfg.checkpoint_dir
 
-  def with_context(scfg: ApplicationConfig, fn: (SparkContext, StreamingContext, DStream[String]) => DStream[T]): Unit = {
+  def with_context(app_cfg: ApplicationConfig, fn: (SparkContext, StreamingContext, DStream[String]) => DStream[T]): Unit = {
     val isIDE = {
       ManagementFactory.getRuntimeMXBean.getInputArguments.toString.contains("IntelliJ IDEA")
     }
@@ -42,15 +42,16 @@ abstract class BaseApplication(cfg: ApplicationConfig) extends Serializable {
 
     val ctx = new SparkContext(cfg)
     val sctx = new StreamingContext(ctx, Seconds(batch_duration.toSeconds))
-    val source = KafkaSource(scfg.kafka_source)
-    val input = source.create(sctx, scfg.topic_input)
+    val kafka_cfg = Map("metadata.broker.list" -> app_cfg.kafka("broker"))
+    val source = KafkaSource(kafka_cfg)
+    val input = source.create(sctx, app_cfg.topic_input)
 
     // FIXME: Spits out errors, when spark context is accessed from transform
     // sctx.checkpoint(checkpoint_dir)
 
     val output = fn(ctx, sctx, input)
 
-    act(output, scfg.kafka_sink, scfg.topic_output, ctx)
+    act(output, kafka_cfg, app_cfg.topic_output, ctx)
 
     sctx.start()
     sctx.awaitTermination()
@@ -82,8 +83,7 @@ import com.typesafe.config.Config
 case class ApplicationConfig(
   topic_input: String,
   topic_output: String,
-  kafka_source: Map[String, String],
-  kafka_sink: Map[String, String],
+  kafka: Map[String, String],
   spark: Map[String, String],
   batch_duration: FiniteDuration,
   checkpoint_dir: String,
@@ -101,8 +101,7 @@ object ApplicationConfig {
     new ApplicationConfig(
       app_cfg.as[String]("topics.input"),
       app_cfg.as[String]("topics.output"),
-      app_cfg.as[Map[String, String]]("kafka.source"),
-      app_cfg.as[Map[String, String]]("kafka.sink"),
+      app_cfg.as[Map[String, String]]("kafka"),
       app_cfg.as[Map[String, String]]("spark"),
       app_cfg.as[FiniteDuration]("batch_duration"),
       app_cfg.as[String]("checkpoint_dir"),
