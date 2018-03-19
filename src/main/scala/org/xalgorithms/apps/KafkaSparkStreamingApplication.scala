@@ -97,9 +97,7 @@ object ApplicationConfig {
   def apply(name: String): ApplicationConfig = apply(name, ConfigFactory.load)
 
   def apply(name: String, all_cfg: Config): ApplicationConfig = {
-    val base_cfg = all_cfg.getConfig(s"$name.application")
-    val env = if (System.getenv("DEPLOYMENT_ENV") == null) "development" else System.getenv("DEPLOYMENT_ENV")
-    val app_cfg = all_cfg.getConfig(s"$name.$env").withFallback(base_cfg)
+    val app_cfg = all_cfg.getConfig(s"$name.application")
     new ApplicationConfig(
       app_cfg.as[String]("topics.input"),
       app_cfg.as[String]("topics.output"),

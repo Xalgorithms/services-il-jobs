@@ -5,21 +5,14 @@
         "input" : "xadf.compute.documents",
         "output" : "xadf.compute.effective"
       },
+      "kafka" : {
+        "broker" : "broker.kafka.l4lb.thisdcos.directory:9092"
+      },
       "spark" : {
         "spark.app.name" : "jobs-xa-effective-rules"
       },
       "batch_duration" : "5s",
       "checkpoint_dir" : "./streaming-checkpoints"
-    },
-    "development" : {
-      "kafka" : {
-        "broker" : "localhost:9092"
-      }
-    },
-    "production" : {
-      "kafka" : {
-        "broker" : "broker.kafka.l4lb.thisdcos.directory:9092"
-      }
     },
     "job" : {
     }
@@ -30,21 +23,14 @@
         "input" : "xadf.compute.effective",
         "output" : "xadf.compute.applicable"
       },
+      "kafka" : {
+        "broker" : "localhost:9092"
+      },
       "spark" : {
         "spark.app.name" : "jobs-xa-applicable-rules"
       },
       "batch_duration" : "5s",
       "checkpoint_dir" : "./streaming-checkpoints"
-    },
-    "development" : {
-      "kafka" : {
-        "broker" : "localhost:9092"
-      }
-    },
-    "production" : {
-      "kafka" : {
-        "broker" : "broker.kafka.l4lb.thisdcos.directory:9092"
-      }
     },
     "job" : {
     }
@@ -55,6 +41,9 @@
         "input" : "xadf.compute.applicable",
         "output" : "xadf.compute.revision"
       },
+      "kafka" : {
+        "broker" : "broker.kafka.l4lb.thisdcos.directory:9092"
+      },
       "spark" : {
         "spark.app.name" : "jobs-xa-execute-rules",
         "spark.mongodb.input.uri": "mongodb://127.0.0.1/xadf.rules",
@@ -63,16 +52,6 @@
       "mongo": "mongodb://127.0.0.1/xadf.rules",
       "batch_duration" : "5s",
       "checkpoint_dir" : "./streaming-checkpoints"
-    },
-    "development" : {
-      "kafka" : {
-        "broker" : "localhost:9092"
-      }
-    },
-    "production" : {
-      "kafka" : {
-        "broker" : "broker.kafka.l4lb.thisdcos.directory:9092"
-      }
     },
     "job" : {
     }
