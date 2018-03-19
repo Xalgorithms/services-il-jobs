@@ -1,0 +1,23 @@
+{
+  "EffectiveRules" : {
+    "application" : {
+      "kafka" : {
+        "broker" : "broker.kafka.l4lb.thisdcos.directory:9092"
+      }
+    }
+  },
+  "ApplicableRules" : {
+    "application" : {
+      "kafka" : {
+        "broker" : "broker.kafka.l4lb.thisdcos.directory:9092"
+      }
+    }
+  },
+  "ExecuteRules" : {
+    "application" : {
+      "kafka" : {
+        "broker" : "broker.kafka.l4lb.thisdcos.directory:9092"
+      }
+    }
+  },
+}
