@@ -10,10 +10,10 @@
       },
       "kafka" : {
         "source" : {
-          "metadata.broker.list" : "localhost:9092"
+          "metadata.broker.list" : "broker.kafka.l4lb.thisdcos.directory:9092"
         },
         "sink" : {
-          "bootstrap.servers": "localhost:9092"
+          "bootstrap.servers": "broker.kafka.l4lb.thisdcos.directory:9092"
         }
       },
       "batch_duration" : "5s",
