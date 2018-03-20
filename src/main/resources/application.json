@@ -6,6 +6,7 @@
         "output" : "xadf.compute.effective"
       },
       "kafka" : {
+        // "broker" : "localhost:9092"
         "broker" : "broker.kafka.l4lb.thisdcos.directory:9092"
       },
       "spark" : {
@@ -24,7 +25,8 @@
         "output" : "xadf.compute.applicable"
       },
       "kafka" : {
-        "broker" : "localhost:9092"
+        // "broker" : "localhost:9092"
+        "broker" : "broker.kafka.l4lb.thisdcos.directory:9092"
       },
       "spark" : {
         "spark.app.name" : "jobs-xa-applicable-rules"
@@ -42,6 +44,7 @@
         "output" : "xadf.compute.revision"
       },
       "kafka" : {
+        // "broker" : "localhost:9092"
         "broker" : "broker.kafka.l4lb.thisdcos.directory:9092"
       },
       "spark" : {
