@@ -42,7 +42,7 @@ abstract class BaseApplication(cfg: ApplicationConfig) extends Serializable {
 
     val ctx = new SparkContext(cfg)
     val sctx = new StreamingContext(ctx, Seconds(batch_duration.toSeconds))
-    val kafka_cfg = Map("metadata.broker.list" -> app_cfg.kafka("broker"))
+    val kafka_cfg = Map("bootstrap.servers" -> app_cfg.kafka("broker"))
     val source = KafkaSource(kafka_cfg)
     val input = source.create(sctx, app_cfg.topic_input)
 
