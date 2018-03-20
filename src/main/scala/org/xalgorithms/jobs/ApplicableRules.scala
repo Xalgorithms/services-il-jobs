@@ -60,8 +60,7 @@ class ApplicableRules(cfg: ApplicationConfig) extends KafkaSparkStreamingApplica
   def execute(): Unit = {
     with_context(cfg, { (ctx, sctx, input) =>
       // 1. build a paired stream from the MongoDB, using "public_id" as the key:
-      val rc = ReadConfig(Map("collection" -> "documents"))
-      val docs_stream = new ConstantInputDStream(sctx, MongoSpark.load[BsonDocument](ctx, rc))
+      val docs_stream = new ConstantInputDStream(sctx, MongoSpark.load[BsonDocument](ctx))
         .map(doc => doc.getString("public_id").getValue() -> doc)
       // => ((public_id), (BsonDocument)
 
