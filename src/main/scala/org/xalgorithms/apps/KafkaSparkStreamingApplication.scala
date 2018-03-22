@@ -40,7 +40,9 @@ abstract class BaseApplication(cfg: ApplicationConfig) extends Serializable {
 
     val ctx = new SparkContext(cfg)
     val sctx = new StreamingContext(ctx, Seconds(batch_duration.toSeconds))
-    val kafka_cfg = Map("bootstrap.servers" -> app_cfg.kafka("broker"))
+
+    // we have to manually copy the Kafka config
+    val kafka_cfg = Map("bootstrap.servers" -> cfg.get("spark.kafka.bootstrap.servers"))
     val source = KafkaSource(kafka_cfg)
     val input = source.create(sctx, app_cfg.topic_input)
 
@@ -81,7 +83,6 @@ import com.typesafe.config.Config
 case class ApplicationConfig(
   topic_input: String,
   topic_output: String,
-  kafka: Map[String, String],
   batch_duration: FiniteDuration,
   checkpoint_dir: String,
   job: Config
@@ -98,7 +99,6 @@ object ApplicationConfig {
     new ApplicationConfig(
       app_cfg.as[String]("topics.input"),
       app_cfg.as[String]("topics.output"),
-      app_cfg.as[Map[String, String]]("kafka"),
       app_cfg.as[FiniteDuration]("batch_duration"),
       app_cfg.as[String]("checkpoint_dir"),
       all_cfg.getConfig(s"$name.job")

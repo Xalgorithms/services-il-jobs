@@ -5,9 +5,6 @@
         "input" : "xadf.compute.documents",
         "output" : "xadf.compute.effective"
       },
-      "kafka" : {
-        "broker" : "broker.kafka.l4lb.thisdcos.directory:9092"
-      },
       "spark" : {
         "spark.app.name" : "jobs-xa-effective-rules"
       },
@@ -22,9 +19,6 @@
       "topics" : {
         "input" : "xadf.compute.effective",
         "output" : "xadf.compute.applicable"
-      },
-      "kafka" : {
-        "broker" : "broker.kafka.l4lb.thisdcos.directory:9092"
       },
       "spark" : {
         "spark.app.name" : "jobs-xa-applicable-rules"
@@ -41,11 +35,8 @@
         "input" : "xadf.compute.applicable",
         "output" : "xadf.compute.revision"
       },
-      "kafka" : {
-        "broker" : "broker.kafka.l4lb.thisdcos.directory:9092"
-      },
-      "mongo": {
-        "uri" : "mongodb://mongodb.marathon.l4lb.thisdcos.directory:27017"
+      "spark" : {
+        "spark.app.name" : "jobs-xa-execute-rules"
       },
       "batch_duration" : "5s",
       "checkpoint_dir" : "./streaming-checkpoints"
