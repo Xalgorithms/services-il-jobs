@@ -1,0 +1,1 @@
+--conf spark.cassandra.connection.host=localhost --conf spark.kafka.bootstrap.servers=localhost:9092

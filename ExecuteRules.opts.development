@@ -1,0 +1,1 @@
+--conf spark.cassandra.connection.host=localhost --conf spark.mongodb.input.uri=mongodb://localhost:27017/xadf --conf spark.mongodb.output.uri=mongodb://localhost:27017/xadf.rules --conf spark.kafka.bootstrap.servers=localhost:9092
