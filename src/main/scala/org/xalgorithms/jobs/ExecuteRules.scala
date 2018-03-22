@@ -54,9 +54,11 @@ class ExecuteRules(cfg: ApplicationConfig) extends KafkaMongoSparkStreamingAppli
 
   def execute(): Unit = {
     with_context(cfg, {(ctx, sctx, input) =>
-      val docReadConfig = ReadConfig(Map("database" -> "xadf", "collection" -> "documents", "readPreference.name" -> "secondaryPreferred"), Some(ReadConfig(ctx)))
-      val ruleReadConfig = ReadConfig(Map("database" -> "xadf", "collection" -> "rules", "readPreference.name" -> "secondaryPreferred"), Some(ReadConfig(ctx)))
-      val tablesReadConfig = ReadConfig(Map("database" -> "xadf", "collection" -> "tables", "readPreference.name" -> "secondaryPreferred"), Some(ReadConfig(ctx)))
+      val uri = ctx.getConf.get("spark.mongodb.input.uri")
+
+      val docReadConfig = ReadConfig(Map("uri" -> uri, "collection" -> "documents"))
+      val ruleReadConfig = ReadConfig(Map("uri" -> uri, "collection" -> "rules"))
+      val tablesReadConfig = ReadConfig(Map("uri" -> uri, "collection" -> "tables"))
 
       val docs_stream = new ConstantInputDStream(sctx, MongoSpark.load[BsonDocument](ctx, docReadConfig))
         .map(doc => doc.getString("public_id").getValue() -> doc)

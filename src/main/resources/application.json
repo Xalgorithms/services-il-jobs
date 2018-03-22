@@ -44,12 +44,9 @@
       "kafka" : {
         "broker" : "broker.kafka.l4lb.thisdcos.directory:9092"
       },
-      "spark" : {
-        "spark.app.name" : "jobs-xa-execute-rules",
-        "spark.mongodb.input.uri": "mongodb://127.0.0.1/xadf.rules",
-        "spark.mongodb.output.uri": "mongodb://127.0.0.1/xadf.rules"
+      "mongo": {
+        "uri" : "mongodb://mongodb.marathon.l4lb.thisdcos.directory:27017"
       },
-      "mongo": "mongodb://127.0.0.1/xadf.rules",
       "batch_duration" : "5s",
       "checkpoint_dir" : "./streaming-checkpoints"
     },

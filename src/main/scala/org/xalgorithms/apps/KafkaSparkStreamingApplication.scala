@@ -25,7 +25,6 @@ import scala.collection.JavaConverters._
 abstract class BaseApplication(cfg: ApplicationConfig) extends Serializable {
   type T
 
-  def spark_cfg: Map[String, String] = cfg.spark
   def batch_duration: FiniteDuration = cfg.batch_duration
   def checkpoint_dir: String = cfg.checkpoint_dir
 
@@ -34,7 +33,6 @@ abstract class BaseApplication(cfg: ApplicationConfig) extends Serializable {
       ManagementFactory.getRuntimeMXBean.getInputArguments.toString.contains("IntelliJ IDEA")
     }
     val cfg = new SparkConf()
-    spark_cfg.foreach { case (n, v) => cfg.setIfMissing(n, v) }
 
     if (isIDE) {
       cfg.setMaster("local[*]")
@@ -84,7 +82,6 @@ case class ApplicationConfig(
   topic_input: String,
   topic_output: String,
   kafka: Map[String, String],
-  spark: Map[String, String],
   batch_duration: FiniteDuration,
   checkpoint_dir: String,
   job: Config
@@ -102,7 +99,6 @@ object ApplicationConfig {
       app_cfg.as[String]("topics.input"),
       app_cfg.as[String]("topics.output"),
       app_cfg.as[Map[String, String]]("kafka"),
-      app_cfg.as[Map[String, String]]("spark"),
       app_cfg.as[FiniteDuration]("batch_duration"),
       app_cfg.as[String]("checkpoint_dir"),
       all_cfg.getConfig(s"$name.job")
