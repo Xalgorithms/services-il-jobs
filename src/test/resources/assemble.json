@@ -1,145 +1,41 @@
-[
-  {
-    "context": "assemble_context_1",
-    "input" : {
-      "steps" : [
+{
+  "steps" : [
+    {
+      "table_name": "table_final",
+      "columns": [
         {
-          "name" : "assemble",
-          "table_name" : "table0",
-          "columns" : [
+          "table": {"section": "tables", "key": "table0", "type": "reference"},
+          "sources": [
             {
-              "table" : "table1",
-              "sources" : [{
-                "source" : "c0",
-                "name" : "c0",
-                "expr" : {
-                  "left" : { "type" : "reference", "section" : "envelope", "key" : "x.y" },
-                  "right" : { "type" : "reference", "section" : "_context", "key" : "a.b" },
+              "columns": ["c0", "c1", "c2"],
+              "whens": [
+                {
+                  "left": {"section": "_context", "key": "a", "type": "reference"},
+                  "right": {"type": "string", "value": "a distant ship"},
                   "op": "eq"
                 }
-              }]
-            }
-          ]
-        }
-      ]
-    },
-    "expects": {
-      "table1": {
-        "a": {
-          "b": "5"
-        },
-        "c0": "7"
-      },
-      "table0": {
-        "c0": "7"
-      }
-    }
-  },
-
-
-  {
-    "context": "assemble_context_1",
-    "input" : {
-      "steps" : [
-        {
-          "name" : "assemble",
-          "table_name" : "table0",
-          "columns" : [
-            {
-              "table" : "table1",
-              "sources" : [{
-                "source" : "c0",
-                "name" : "nc0",
-                "expr" : {
-                  "left" : { "type" : "reference", "section" : "envelope", "key" : "x.y" },
-                  "right" : { "type" : "number", "value" : "6" },
-                  "op": "lte"
-                }
-              }]
-            }
-          ]
-        }
-      ]
-    },
-    "expects": {
-      "table1": {
-        "a": {
-          "b": "5"
-        },
-        "c0": "7"
-      },
-      "table0": {
-        "nc0": "7"
-      }
-    }
-  },
-
-
-  {
-    "context": "assemble_context_2",
-    "input" : {
-      "steps" : [
-        {
-          "name" : "assemble",
-          "table_name" : "table0",
-          "columns" : [
-            {
-              "table" : "table1",
-              "sources" : [
-                {
-                  "source" : "c0",
-                  "name" : "nc0",
-                  "expr" : {
-                    "left" : { "type" : "reference", "section" : "envelope", "key" : "x.y" },
-                    "right" : { "type" : "number", "value" : "6" },
-                    "op" : "lte"
-                  }
-                },
-                {
-                  "source" : "c1",
-                  "name" : "nc1",
-                  "expr" : {
-                    "left" : { "type" : "name", "value": "nc0" },
-                    "right" : { "type" : "number", "value" : "7" },
-                    "op": "eq"
-                  }
-                }
               ]
-            },
+            }
+          ]
+        },
+        {
+          "table": {"section": "tables", "key": "table1", "type": "reference"},
+          "sources": [
             {
-              "table" : "table2",
-              "sources" : [
+              "name": "y",
+              "source": "x",
+              "whens": [
                 {
-                  "source" : "b0",
-                  "name" : "nc2",
-                  "expr" : {
-                    "left" : { "type" : "reference", "section" : "envelope", "key" : "p.q" },
-                    "right" : { "type" : "number", "value" : "3" },
-                    "op": "eq"
-                  }
+                  "left": {"section": "_local", "key": "x", "type": "reference"},
+                  "right": {"type": "number", "value": "1"},
+                  "op": "eq"
                 }
               ]
             }
           ]
         }
-      ]
-    },
-    "expects": {
-      "table1": {
-        "a": {
-          "b": "5"
-        },
-        "c0": "7",
-        "c1": "1"
-      },
-      "table2": {
-        "b0": "8"
-      },
-      "table0": {
-        "nc0": "7",
-        "nc1": "1",
-        "nc2": "8"
-      }
+      ],
+      "name": "assemble"
     }
-  }
-]
+  ]
+}  
