@@ -74,6 +74,8 @@ class SyntaxSpec extends FlatSpec with Matchers {
     steps.head shouldBe a [Keep]
 
     val o = steps.head.asInstanceOf[Keep]
+    o.name shouldEqual("keep")
+    o.table shouldEqual("table0")
   }
 
   it should "load MapStep from JSON" in {

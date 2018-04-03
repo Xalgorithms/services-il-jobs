@@ -43,7 +43,7 @@ class Assemble(val name: String, val columns: Seq[Column]) extends Step {
 class Filter extends Step {
 }
 
-class Keep extends Step {
+class Keep(val name: String, val table: String) extends Step {
 }
 
 class MapStep extends Step {
@@ -174,7 +174,7 @@ object StepProduce {
   }
 
   def produce_keep(content: JsObject): Step = {
-    return new Keep()
+    return new Keep(stringOrNull(content, "name"), stringOrNull(content, "table_name"))
   }
 
   def produce_map(content: JsObject): Step = {
