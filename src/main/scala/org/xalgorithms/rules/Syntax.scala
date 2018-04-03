@@ -40,6 +40,27 @@ class When(val left: Value, val right: Value, val op: String) {
 class Assignment(val target: String, val source: Value) {
 }
 
+class RevisionSource(val column: String, val whens: Seq[When]) {
+}
+
+class TableRevisionSource(
+  column: String, whens: Seq[When], val table: Reference) extends RevisionSource(column, whens) {
+}
+
+class AddRevisionSource(
+  column: String, whens: Seq[When], table: Reference) extends TableRevisionSource(column, whens, table) {
+}
+
+class UpdateRevisionSource(
+  column: String, whens: Seq[When], table: Reference) extends TableRevisionSource(column, whens, table) {
+}
+
+class DeleteRevisionSource(column: String, whens: Seq[When]) extends RevisionSource(column, whens) {
+}
+
+class Revision(val source: RevisionSource) {
+}
+
 class Assemble(val name: String, val columns: Seq[Column]) extends Step {
 }
 
@@ -63,7 +84,7 @@ class Reduce(
 class Require(val table_reference: PackagedTableReference, val indexes: Seq[String]) extends Step {
 }
 
-class Revise extends Step {
+class Revise(val table: Reference, val revisions: Seq[Revision]) extends Step {
 }
 
 object StepProduce {
@@ -103,6 +124,28 @@ object StepProduce {
     (JsPath \ "target").read[String] and
     (JsPath \ "source").read[JsObject]
   )(produce_assignment _)
+
+  implicit val revisionReads : Reads[Revision] = (
+    (JsPath \ "op").read[String] and
+    (JsPath \ "source").read[JsObject]
+  )(produce_revision _)
+
+  implicit val addRevisionSourceReads : Reads[AddRevisionSource] = (
+    (JsPath \ "column").read[String] and
+    (JsPath \ "table").read[JsObject] and
+    (JsPath \ "whens").read[JsArray]
+  )(produce_add_revision_source _)
+  
+  implicit val updateRevisionSourceReads : Reads[UpdateRevisionSource] = (
+    (JsPath \ "column").read[String] and
+    (JsPath \ "table").read[JsObject] and
+    (JsPath \ "whens").read[JsArray]
+  )(produce_update_revision_source _)
+
+  implicit val deleteRevisionSourceReads : Reads[DeleteRevisionSource] = (
+    (JsPath \ "column").read[String] and
+    (JsPath \ "whens").read[JsArray]
+  )(produce_delete_revision_source _)
 
   def stringOrNull(content: JsObject, k: String): String = {
     return (content \ k).validate[String].getOrElse(null)
@@ -169,6 +212,47 @@ object StepProduce {
     )
   }
 
+  def produce_revision(op: String, source: JsObject): Revision = {
+    if (op == "add") {
+      return new Revision(
+        source.validate[AddRevisionSource].getOrElse(null)
+      )
+    } else if (op == "update") {
+      return new Revision(
+        source.validate[UpdateRevisionSource].getOrElse(null)
+      )
+    } else if (op == "delete") {
+      return new Revision(
+        source.validate[DeleteRevisionSource].getOrElse(null)
+      )
+    }
+
+    return null
+  }
+
+  def produce_add_revision_source(column: String, table: JsObject, whens: JsArray): AddRevisionSource = {
+    return new AddRevisionSource(
+      column,
+      whens.validate[Seq[When]].getOrElse(Seq()),
+      table.validate[Reference].getOrElse(null)
+    )
+  }
+
+  def produce_update_revision_source(column: String, table: JsObject, whens: JsArray): UpdateRevisionSource = {
+    return new UpdateRevisionSource(
+      column,
+      whens.validate[Seq[When]].getOrElse(Seq()),
+      table.validate[Reference].getOrElse(null)
+    )
+  }
+
+  def produce_delete_revision_source(column: String, whens: JsArray): DeleteRevisionSource = {
+    return new DeleteRevisionSource(
+      column,
+      whens.validate[Seq[When]].getOrElse(Seq())
+    )
+  }
+
   def produce_column(table_reference: JsObject, sources: JsArray): Column = {
     return new Column(
       table_reference.validate[Reference].getOrElse(null),
@@ -216,13 +300,15 @@ object StepProduce {
 
   def produce_require(content: JsObject): Step = {
     return new Require(
-      produce_packaged_table_reference(
-        (content \ "reference").as[JsObject]),
+      produce_packaged_table_reference((content \ "reference").as[JsObject]),
       (content \ "indexes").as[Seq[String]])
   }
 
   def produce_revise(content: JsObject): Step = {
-    return new Revise()
+    return new Revise(
+      (content \ "table").validate[Reference].getOrElse(null),
+      (content \ "revisions").validate[Seq[Revision]].getOrElse(Seq())
+    )
   }
 
   val fns = Map[String, (JsObject) => Step](

@@ -186,5 +186,54 @@ class SyntaxSpec extends FlatSpec with Matchers {
     steps.head shouldBe a [Revise]
 
     val o = steps.head.asInstanceOf[Revise]
+
+    o.table should not be null
+    o.table.section shouldEqual("tables")
+    o.table.key shouldEqual("items")
+
+    o.revisions.length shouldEqual(3)
+    o.revisions(0) should not be null
+    o.revisions(0).source should not be null
+    o.revisions(0).source shouldBe a [AddRevisionSource]
+    o.revisions(0).source.column shouldEqual("a.b")
+    o.revisions(0).source.asInstanceOf[TableRevisionSource].table.section shouldEqual("table")
+    o.revisions(0).source.asInstanceOf[TableRevisionSource].table.key shouldEqual("foo")
+    o.revisions(0).source.whens.length shouldEqual(1)
+    o.revisions(0).source.whens(0) should not be null
+    o.revisions(0).source.whens(0).left shouldBe a [Reference]
+    o.revisions(0).source.whens(0).left.asInstanceOf[Reference].section shouldEqual("_local")
+    o.revisions(0).source.whens(0).left.asInstanceOf[Reference].key shouldEqual("x")
+    o.revisions(0).source.whens(0).right shouldBe a [Reference]
+    o.revisions(0).source.whens(0).right.asInstanceOf[Reference].section shouldEqual("_context")
+    o.revisions(0).source.whens(0).right.asInstanceOf[Reference].key shouldEqual("y")
+    o.revisions(0).source.whens(0).op shouldEqual("eq")
+
+    o.revisions(1) should not be null
+    o.revisions(1).source should not be null
+    o.revisions(1).source shouldBe a [UpdateRevisionSource]
+    o.revisions(1).source.column shouldEqual("c")
+    o.revisions(1).source.asInstanceOf[TableRevisionSource].table.section shouldEqual("table")
+    o.revisions(1).source.asInstanceOf[TableRevisionSource].table.key shouldEqual("bar")
+    o.revisions(1).source.whens.length shouldEqual(1)
+    o.revisions(1).source.whens(0) should not be null
+    o.revisions(1).source.whens(0).left shouldBe a [Reference]
+    o.revisions(1).source.whens(0).left.asInstanceOf[Reference].section shouldEqual("_context")
+    o.revisions(1).source.whens(0).left.asInstanceOf[Reference].key shouldEqual("q")
+    o.revisions(1).source.whens(0).right shouldBe a [Number]
+    o.revisions(1).source.whens(0).right.asInstanceOf[Number].value shouldEqual(3.0)
+    o.revisions(1).source.whens(0).op shouldEqual("lt")
+
+    o.revisions(2) should not be null
+    o.revisions(2).source should not be null
+    o.revisions(2).source shouldBe a [DeleteRevisionSource]
+    o.revisions(2).source.column shouldEqual("d")
+    o.revisions(2).source.whens.length shouldEqual(1)
+    o.revisions(2).source.whens(0) should not be null
+    o.revisions(2).source.whens(0).left shouldBe a [Reference]
+    o.revisions(2).source.whens(0).left.asInstanceOf[Reference].section shouldEqual("_context")
+    o.revisions(2).source.whens(0).left.asInstanceOf[Reference].key shouldEqual("r")
+    o.revisions(2).source.whens(0).right shouldBe a [Number]
+    o.revisions(2).source.whens(0).right.asInstanceOf[Number].value shouldEqual(1.0)
+    o.revisions(2).source.whens(0).op shouldEqual("eq")
   }
 }
