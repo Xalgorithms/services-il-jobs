@@ -64,6 +64,21 @@ class SyntaxSpec extends FlatSpec with Matchers {
     steps.head shouldBe a [Filter]
 
     val o = steps.head.asInstanceOf[Filter]
+
+    o.table should not be null
+    o.table.section shouldEqual("tables")
+    o.table.key shouldEqual("table0")
+
+    o.filters.length shouldBe 1
+    o.filters(0) should not be null
+    o.filters(0).left should not be null
+    o.filters(0).left shouldBe a [Reference]
+    o.filters(0).left.asInstanceOf[Reference].section shouldEqual("_context")
+    o.filters(0).left.asInstanceOf[Reference].key shouldEqual("a")
+    o.filters(0).right should not be null
+    o.filters(0).right shouldBe a [Number]
+    o.filters(0).right.asInstanceOf[Number].value shouldEqual(3.0)
+    o.filters(0).op shouldEqual("lt")
   }
 
   it should "load Keep from JSON" in {
@@ -86,6 +101,31 @@ class SyntaxSpec extends FlatSpec with Matchers {
     steps.head shouldBe a [MapStep]
 
     val o = steps.head.asInstanceOf[MapStep]
+
+    o.table should not be null
+    o.table.section shouldEqual("tables")
+    o.table.key shouldEqual("items")
+
+    o.assignments.length shouldBe 3
+
+    o.assignments(0) should not be null
+    o.assignments(0).target shouldEqual("a.b.c")
+    o.assignments(0).source should not be null
+    o.assignments(0).source shouldBe a [Reference]
+    o.assignments(0).source.asInstanceOf[Reference].section shouldEqual("_context")
+    o.assignments(0).source.asInstanceOf[Reference].key shouldEqual("x.y.z")
+
+    o.assignments(1) should not be null
+    o.assignments(1).target shouldEqual("c")
+    o.assignments(1).source should not be null
+    o.assignments(1).source shouldBe a [Number]
+    o.assignments(1).source.asInstanceOf[Number].value shouldEqual(2.0)
+
+    o.assignments(2) should not be null
+    o.assignments(2).target shouldEqual("d")
+    o.assignments(2).source should not be null
+    o.assignments(2).source shouldBe a [StringValue]
+    o.assignments(2).source.asInstanceOf[StringValue].value shouldEqual("s")
   }
 
   it should "load Reduce from JSON" in {
@@ -96,6 +136,30 @@ class SyntaxSpec extends FlatSpec with Matchers {
     steps.head shouldBe a [Reduce]
 
     val o = steps.head.asInstanceOf[Reduce]
+
+    o.table should not be null
+    o.table.section shouldEqual("tables")
+    o.table.key shouldEqual("foo")
+
+    o.assignments.length shouldBe 1
+    o.assignments(0) should not be null
+    o.assignments(0).target shouldEqual("a")
+    o.assignments(0).source should not be null
+    o.assignments(0).source shouldBe a [Reference]
+    o.assignments(0).source.asInstanceOf[Reference].section shouldEqual("_context")
+    o.assignments(0).source.asInstanceOf[Reference].key shouldEqual("b")
+
+    o.filters.length shouldBe 1
+    o.filters(0) should not be null
+    o.filters(0).left should not be null
+    o.filters(0).left shouldBe a [Reference]
+    o.filters(0).left.asInstanceOf[Reference].section shouldEqual("_context")
+    o.filters(0).left.asInstanceOf[Reference].key shouldEqual("c")
+    o.filters(0).right should not be null
+    o.filters(0).right shouldBe a [Reference]
+    o.filters(0).right.asInstanceOf[Reference].section shouldEqual("_context")
+    o.filters(0).right.asInstanceOf[Reference].key shouldEqual("a")
+    o.filters(0).op shouldEqual("eq")
   }
 
   it should "load Require from JSON" in {

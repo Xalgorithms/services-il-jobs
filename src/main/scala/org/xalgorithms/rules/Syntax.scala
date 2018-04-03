@@ -37,19 +37,27 @@ class StringValue(val value: String) extends Value {
 class When(val left: Value, val right: Value, val op: String) {
 }
 
+class Assignment(val target: String, val source: Value) {
+}
+
 class Assemble(val name: String, val columns: Seq[Column]) extends Step {
 }
 
-class Filter extends Step {
+class Filter(val table: Reference, val filters: Seq[When]) extends Step {
 }
 
 class Keep(val name: String, val table: String) extends Step {
 }
 
-class MapStep extends Step {
+class AssignmentStep(val table: Reference, val assignments: Seq[Assignment]) extends Step {
 }
 
-class Reduce extends Step {
+class MapStep(table: Reference, assignments: Seq[Assignment]) extends AssignmentStep(table, assignments) {
+}
+
+class Reduce(
+  val filters: Seq[When],
+  table: Reference, assignments: Seq[Assignment]) extends AssignmentStep(table, assignments) {
 }
 
 class Require(val table_reference: PackagedTableReference, val indexes: Seq[String]) extends Step {
@@ -90,6 +98,11 @@ object StepProduce {
     (JsPath \ "type").read[String] and
     (JsPath).read[JsObject]
   )(produce_value _)
+
+  implicit val assignmentReads: Reads[Assignment] = (
+    (JsPath \ "target").read[String] and
+    (JsPath \ "source").read[JsObject]
+  )(produce_assignment _)
 
   def stringOrNull(content: JsObject, k: String): String = {
     return (content \ k).validate[String].getOrElse(null)
@@ -150,6 +163,12 @@ object StepProduce {
     return null
   }
 
+  def produce_assignment(target: String, source: JsObject): Assignment = {
+    return new Assignment(
+      target, source.validate[Value].getOrElse(null)
+    )
+  }
+
   def produce_column(table_reference: JsObject, sources: JsArray): Column = {
     return new Column(
       table_reference.validate[Reference].getOrElse(null),
@@ -170,7 +189,10 @@ object StepProduce {
   }
 
   def produce_filter(content: JsObject): Step = {
-    return new Filter()
+    return new Filter(
+      (content \ "table").validate[Reference].getOrElse(null),
+      (content \ "filters").validate[Seq[When]].getOrElse(Seq())
+    )
   }
 
   def produce_keep(content: JsObject): Step = {
@@ -178,11 +200,18 @@ object StepProduce {
   }
 
   def produce_map(content: JsObject): Step = {
-    return new MapStep()
+    return new MapStep(
+      (content \ "table").validate[Reference].getOrElse(null),
+      (content \ "assignments").validate[Seq[Assignment]].getOrElse(Seq())
+    )
   }
 
   def produce_reduce(content: JsObject): Step = {
-    return new Reduce()
+    return new Reduce(
+      (content \ "filters").validate[Seq[When]].getOrElse(Seq()),
+      (content \ "table").validate[Reference].getOrElse(null),
+      (content \ "assignments").validate[Seq[Assignment]].getOrElse(Seq())
+    )
   }
 
   def produce_require(content: JsObject): Step = {
