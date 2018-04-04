@@ -6,14 +6,14 @@ import scala.io.Source
 import org.scalatest._
 
 class SyntaxSpec extends FlatSpec with Matchers {
-  "Syntax" should "load Assemble from JSON" in {
+  "AssembleStep" should "load from JSON" in {
     val source = Source.fromURL(getClass.getResource("/assemble.json"))
     val steps = SyntaxFromSource(source)
     steps.length shouldBe 1
     steps.head should not be null
-    steps.head shouldBe a [Assemble]
+    steps.head shouldBe a [AssembleStep]
 
-    val o = steps.head.asInstanceOf[Assemble]
+    val o = steps.head.asInstanceOf[AssembleStep]
     o.name shouldEqual("table_final")
 
     o.columns.length shouldBe 2
@@ -56,14 +56,14 @@ class SyntaxSpec extends FlatSpec with Matchers {
     o.columns(1).sources(0).whens(0).op shouldEqual("eq")
   }
 
-  it should "load Filter from JSON" in {
+  "FilterStep" should "load from JSON" in {
     val source = Source.fromURL(getClass.getResource("/filter.json"))
     val steps = SyntaxFromSource(source)
     steps.length shouldBe 1
     steps.head should not be null
-    steps.head shouldBe a [Filter]
+    steps.head shouldBe a [FilterStep]
 
-    val o = steps.head.asInstanceOf[Filter]
+    val o = steps.head.asInstanceOf[FilterStep]
 
     o.table should not be null
     o.table.section shouldEqual("tables")
@@ -81,19 +81,19 @@ class SyntaxSpec extends FlatSpec with Matchers {
     o.filters(0).op shouldEqual("lt")
   }
 
-  it should "load Keep from JSON" in {
+  "KeepStep" should "load from JSON" in {
     val source = Source.fromURL(getClass.getResource("/keep.json"))
     val steps = SyntaxFromSource(source)
     steps.length shouldBe 1
     steps.head should not be null
-    steps.head shouldBe a [Keep]
+    steps.head shouldBe a [KeepStep]
 
-    val o = steps.head.asInstanceOf[Keep]
+    val o = steps.head.asInstanceOf[KeepStep]
     o.name shouldEqual("keep")
     o.table shouldEqual("table0")
   }
 
-  it should "load MapStep from JSON" in {
+  "MapStep" should "load from JSON" in {
     val source = Source.fromURL(getClass.getResource("/map.json"))
     val steps = SyntaxFromSource(source)
     steps.length shouldBe 1
@@ -128,14 +128,14 @@ class SyntaxSpec extends FlatSpec with Matchers {
     o.assignments(2).source.asInstanceOf[StringValue].value shouldEqual("s")
   }
 
-  it should "load Reduce from JSON" in {
+  "ReduceStep" should "load from JSON" in {
     val source = Source.fromURL(getClass.getResource("/reduce.json"))
     val steps = SyntaxFromSource(source)
     steps.length shouldBe 1
     steps.head should not be null
-    steps.head shouldBe a [Reduce]
+    steps.head shouldBe a [ReduceStep]
 
-    val o = steps.head.asInstanceOf[Reduce]
+    val o = steps.head.asInstanceOf[ReduceStep]
 
     o.table should not be null
     o.table.section shouldEqual("tables")
@@ -162,14 +162,14 @@ class SyntaxSpec extends FlatSpec with Matchers {
     o.filters(0).op shouldEqual("eq")
   }
 
-  it should "load Require from JSON" in {
+  "RequireStep" should "load from JSON" in {
     val source = Source.fromURL(getClass.getResource("/require.json"))
     val steps = SyntaxFromSource(source)
     steps.length shouldBe 1
     steps.head should not be null
-    steps.head shouldBe a [Require]
+    steps.head shouldBe a [RequireStep]
 
-    val o = steps.head.asInstanceOf[Require]
+    val o = steps.head.asInstanceOf[RequireStep]
     o.table_reference should not be null
     o.table_reference.package_name shouldEqual "package"
     o.table_reference.id shouldEqual "id"
@@ -178,14 +178,14 @@ class SyntaxSpec extends FlatSpec with Matchers {
     o.indexes shouldEqual Seq("a", "b")
   }
 
-  it should "load Revise from JSON" in {
+  "ReviseStep" should "load from JSON" in {
     val source = Source.fromURL(getClass.getResource("/revise.json"))
     val steps = SyntaxFromSource(source)
     steps.length shouldBe 1
     steps.head should not be null
-    steps.head shouldBe a [Revise]
+    steps.head shouldBe a [ReviseStep]
 
-    val o = steps.head.asInstanceOf[Revise]
+    val o = steps.head.asInstanceOf[ReviseStep]
 
     o.table should not be null
     o.table.section shouldEqual("tables")

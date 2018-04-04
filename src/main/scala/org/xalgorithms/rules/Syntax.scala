@@ -61,13 +61,13 @@ class DeleteRevisionSource(column: String, whens: Seq[When]) extends RevisionSou
 class Revision(val source: RevisionSource) {
 }
 
-class Assemble(val name: String, val columns: Seq[Column]) extends Step {
+class AssembleStep(val name: String, val columns: Seq[Column]) extends Step {
 }
 
-class Filter(val table: Reference, val filters: Seq[When]) extends Step {
+class FilterStep(val table: Reference, val filters: Seq[When]) extends Step {
 }
 
-class Keep(val name: String, val table: String) extends Step {
+class KeepStep(val name: String, val table: String) extends Step {
 }
 
 class AssignmentStep(val table: Reference, val assignments: Seq[Assignment]) extends Step {
@@ -76,15 +76,15 @@ class AssignmentStep(val table: Reference, val assignments: Seq[Assignment]) ext
 class MapStep(table: Reference, assignments: Seq[Assignment]) extends AssignmentStep(table, assignments) {
 }
 
-class Reduce(
+class ReduceStep(
   val filters: Seq[When],
   table: Reference, assignments: Seq[Assignment]) extends AssignmentStep(table, assignments) {
 }
 
-class Require(val table_reference: PackagedTableReference, val indexes: Seq[String]) extends Step {
+class RequireStep(val table_reference: PackagedTableReference, val indexes: Seq[String]) extends Step {
 }
 
-class Revise(val table: Reference, val revisions: Seq[Revision]) extends Step {
+class ReviseStep(val table: Reference, val revisions: Seq[Revision]) extends Step {
 }
 
 object StepProduce {
@@ -266,21 +266,21 @@ object StepProduce {
   }
 
   def produce_assemble(content: JsObject): Step = {
-    return new Assemble(
+    return new AssembleStep(
       stringOrNull(content, "table_name"),
       (content \ "columns").validate[Seq[Column]].getOrElse(null)
     )
   }
 
   def produce_filter(content: JsObject): Step = {
-    return new Filter(
+    return new FilterStep(
       (content \ "table").validate[Reference].getOrElse(null),
       (content \ "filters").validate[Seq[When]].getOrElse(Seq())
     )
   }
 
   def produce_keep(content: JsObject): Step = {
-    return new Keep(stringOrNull(content, "name"), stringOrNull(content, "table_name"))
+    return new KeepStep(stringOrNull(content, "name"), stringOrNull(content, "table_name"))
   }
 
   def produce_map(content: JsObject): Step = {
@@ -291,7 +291,7 @@ object StepProduce {
   }
 
   def produce_reduce(content: JsObject): Step = {
-    return new Reduce(
+    return new ReduceStep(
       (content \ "filters").validate[Seq[When]].getOrElse(Seq()),
       (content \ "table").validate[Reference].getOrElse(null),
       (content \ "assignments").validate[Seq[Assignment]].getOrElse(Seq())
@@ -299,13 +299,13 @@ object StepProduce {
   }
 
   def produce_require(content: JsObject): Step = {
-    return new Require(
+    return new RequireStep(
       produce_packaged_table_reference((content \ "reference").as[JsObject]),
       (content \ "indexes").as[Seq[String]])
   }
 
   def produce_revise(content: JsObject): Step = {
-    return new Revise(
+    return new ReviseStep(
       (content \ "table").validate[Reference].getOrElse(null),
       (content \ "revisions").validate[Seq[Revision]].getOrElse(Seq())
     )
