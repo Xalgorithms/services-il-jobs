@@ -120,7 +120,15 @@ object StepProduce {
     } else if ("number" == vt) {
       return new Number(doubleOrNull(content, "value"))
     } else if ("reference" == vt) {
-      return new Reference(stringOrNull(content, "section"), stringOrNull(content, "key"))
+      return new Reference(
+        stringOrNull(content, "section"),
+        stringOrNull(content, "key")
+      )
+    } else if ("function" == vt) {
+      return new FunctionValue(
+        stringOrNull(content, "name"),
+        (content \ "args").validate[Seq[Value]].getOrElse(Seq())
+      )
     }
 
     return null

@@ -12,3 +12,5 @@ class Number(val value: Double) extends Value {
 class StringValue(val value: String) extends Value {
 }
 
+class FunctionValue(val name: String, val args: Seq[Value]) extends Value {
+}
