@@ -1,6 +1,8 @@
 package org.xalgorithms.rules
 
 import org.xalgorithms.rules._
+import org.xalgorithms.rules.steps._
+import org.xalgorithms.rules.elements._
 
 import scala.io.Source
 import org.scalatest._
