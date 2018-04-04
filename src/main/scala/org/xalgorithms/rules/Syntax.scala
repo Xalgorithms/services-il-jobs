@@ -4,88 +4,8 @@ import play.api.libs.json._
 import play.api.libs.functional.syntax._
 import scala.io.Source
 
-class Step {
-}
-
-class PackagedTableReference(val package_name: String, val id: String, val version: String, val name: String) {
-}
-
-class Column(val table: Reference, val sources: Seq[TableSource]) {
-}
-
-class TableSource(val whens: Seq[When]) {
-}
-
-class ColumnTableSource(val name: String, val source: String, whens: Seq[When]) extends TableSource(whens) {
-}
-
-class ColumnsTableSource(val columns: Seq[String], whens: Seq[When]) extends TableSource(whens) {
-}
-
-class Value {
-}
-
-class Reference(val section: String, val key: String) extends Value {
-}
-
-class Number(val value: Double) extends Value {
-}
-
-class StringValue(val value: String) extends Value {
-}
-
-class When(val left: Value, val right: Value, val op: String) {
-}
-
-class Assignment(val target: String, val source: Value) {
-}
-
-class RevisionSource(val column: String, val whens: Seq[When]) {
-}
-
-class TableRevisionSource(
-  column: String, whens: Seq[When], val table: Reference) extends RevisionSource(column, whens) {
-}
-
-class AddRevisionSource(
-  column: String, whens: Seq[When], table: Reference) extends TableRevisionSource(column, whens, table) {
-}
-
-class UpdateRevisionSource(
-  column: String, whens: Seq[When], table: Reference) extends TableRevisionSource(column, whens, table) {
-}
-
-class DeleteRevisionSource(column: String, whens: Seq[When]) extends RevisionSource(column, whens) {
-}
-
-class Revision(val source: RevisionSource) {
-}
-
-class AssembleStep(val name: String, val columns: Seq[Column]) extends Step {
-}
-
-class FilterStep(val table: Reference, val filters: Seq[When]) extends Step {
-}
-
-class KeepStep(val name: String, val table: String) extends Step {
-}
-
-class AssignmentStep(val table: Reference, val assignments: Seq[Assignment]) extends Step {
-}
-
-class MapStep(table: Reference, assignments: Seq[Assignment]) extends AssignmentStep(table, assignments) {
-}
-
-class ReduceStep(
-  val filters: Seq[When],
-  table: Reference, assignments: Seq[Assignment]) extends AssignmentStep(table, assignments) {
-}
-
-class RequireStep(val table_reference: PackagedTableReference, val indexes: Seq[String]) extends Step {
-}
-
-class ReviseStep(val table: Reference, val revisions: Seq[Revision]) extends Step {
-}
+import org.xalgorithms.rules.steps._
+import org.xalgorithms.rules.elements._
 
 object StepProduce {
   implicit val columnReads: Reads[Column] = (
@@ -200,7 +120,15 @@ object StepProduce {
     } else if ("number" == vt) {
       return new Number(doubleOrNull(content, "value"))
     } else if ("reference" == vt) {
-      return new Reference(stringOrNull(content, "section"), stringOrNull(content, "key"))
+      return new Reference(
+        stringOrNull(content, "section"),
+        stringOrNull(content, "key")
+      )
+    } else if ("function" == vt) {
+      return new FunctionValue(
+        stringOrNull(content, "name"),
+        (content \ "args").validate[Seq[Value]].getOrElse(Seq())
+      )
     }
 
     return null

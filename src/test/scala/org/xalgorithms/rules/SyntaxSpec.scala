@@ -1,6 +1,8 @@
 package org.xalgorithms.rules
 
 import org.xalgorithms.rules._
+import org.xalgorithms.rules.steps._
+import org.xalgorithms.rules.elements._
 
 import scala.io.Source
 import org.scalatest._
@@ -128,6 +130,36 @@ class SyntaxSpec extends FlatSpec with Matchers {
     o.assignments(2).source.asInstanceOf[StringValue].value shouldEqual("s")
   }
 
+  it should "read function usings from JSON" in {
+    val source = Source.fromURL(getClass.getResource("/map_functions.json"))
+    val steps = SyntaxFromSource(source)
+    steps.length shouldBe 1
+    steps.head should not be null
+    steps.head shouldBe a [MapStep]
+
+    val o = steps.head.asInstanceOf[MapStep]
+
+    o.assignments.length shouldBe 1
+
+    o.assignments(0).source should not be null
+    o.assignments(0).source shouldBe a [FunctionValue]
+    o.assignments(0).source.asInstanceOf[FunctionValue].name shouldEqual("multiply")
+    o.assignments(0).source.asInstanceOf[FunctionValue].args.length shouldEqual(2)
+    o.assignments(0).source.asInstanceOf[FunctionValue].args(0) shouldBe a [FunctionValue]
+
+    val arg0 = o.assignments(0).source.asInstanceOf[FunctionValue].args(0).asInstanceOf[FunctionValue]
+    arg0.name shouldEqual("add")
+    arg0.args.length shouldEqual(2)
+    arg0.args(0) shouldBe a [Reference]
+    arg0.args(0).asInstanceOf[Reference].section shouldEqual("_context")
+    arg0.args(0).asInstanceOf[Reference].key shouldEqual("b")
+    arg0.args(1) shouldBe a [Number]
+    arg0.args(1).asInstanceOf[Number].value shouldEqual(2.0)
+
+    o.assignments(0).source.asInstanceOf[FunctionValue].args(1) shouldBe a [Number]
+    o.assignments(0).source.asInstanceOf[FunctionValue].args(1).asInstanceOf[Number].value shouldEqual(4.0)
+  }
+
   "ReduceStep" should "load from JSON" in {
     val source = Source.fromURL(getClass.getResource("/reduce.json"))
     val steps = SyntaxFromSource(source)
@@ -160,6 +192,37 @@ class SyntaxSpec extends FlatSpec with Matchers {
     o.filters(0).right.asInstanceOf[Reference].section shouldEqual("_context")
     o.filters(0).right.asInstanceOf[Reference].key shouldEqual("a")
     o.filters(0).op shouldEqual("eq")
+  }
+
+  it should "read function usings from JSON" in {
+    val source = Source.fromURL(getClass.getResource("/reduce_functions.json"))
+    val steps = SyntaxFromSource(source)
+    steps.length shouldBe 1
+    steps.head should not be null
+    steps.head shouldBe a [ReduceStep]
+
+    val o = steps.head.asInstanceOf[ReduceStep]
+    o.assignments.length shouldBe 1
+
+    o.assignments(0).source should not be null
+    o.assignments(0).source shouldBe a [FunctionValue]
+    o.assignments(0).source.asInstanceOf[FunctionValue].name shouldEqual("add")
+    o.assignments(0).source.asInstanceOf[FunctionValue].args.length shouldEqual(2)
+    o.assignments(0).source.asInstanceOf[FunctionValue].args(0) shouldBe a [FunctionValue]
+
+    val arg0 = o.assignments(0).source.asInstanceOf[FunctionValue].args(0).asInstanceOf[FunctionValue]
+    arg0.name shouldEqual("multiply")
+    arg0.args.length shouldEqual(2)
+    arg0.args(0) shouldBe a [Reference]
+    arg0.args(0).asInstanceOf[Reference].section shouldEqual("_context")
+    arg0.args(0).asInstanceOf[Reference].key shouldEqual("b")
+    arg0.args(1) shouldBe a [Reference]
+    arg0.args(1).asInstanceOf[Reference].section shouldEqual("_context")
+    arg0.args(1).asInstanceOf[Reference].key shouldEqual("c")
+
+    o.assignments(0).source.asInstanceOf[FunctionValue].args(1) shouldBe a [Reference]
+    o.assignments(0).source.asInstanceOf[FunctionValue].args(1).asInstanceOf[Reference].section shouldEqual("_context")
+    o.assignments(0).source.asInstanceOf[FunctionValue].args(1).asInstanceOf[Reference].key shouldEqual("d")
   }
 
   "RequireStep" should "load from JSON" in {
