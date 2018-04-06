@@ -118,7 +118,7 @@ object StepProduce {
     if ("string" == vt) {
       return new StringValue(stringOrNull(content, "value"))
     } else if ("number" == vt) {
-      return new Number(doubleOrNull(content, "value"))
+      return new NumberValue(doubleOrNull(content, "value"))
     } else if ("reference" == vt) {
       return new Reference(
         stringOrNull(content, "section"),

@@ -53,8 +53,8 @@ class SyntaxSpec extends FlatSpec with Matchers {
     o.columns(1).sources(0).whens(0).left.asInstanceOf[Reference].section shouldEqual("_local")
     o.columns(1).sources(0).whens(0).left.asInstanceOf[Reference].key shouldEqual("x")
     o.columns(1).sources(0).whens(0).right should not be null
-    o.columns(1).sources(0).whens(0).right shouldBe a [Number]
-    o.columns(1).sources(0).whens(0).right.asInstanceOf[Number].value shouldEqual(1.0)
+    o.columns(1).sources(0).whens(0).right shouldBe a [NumberValue]
+    o.columns(1).sources(0).whens(0).right.asInstanceOf[NumberValue].value shouldEqual(1.0)
     o.columns(1).sources(0).whens(0).op shouldEqual("eq")
   }
 
@@ -78,8 +78,8 @@ class SyntaxSpec extends FlatSpec with Matchers {
     o.filters(0).left.asInstanceOf[Reference].section shouldEqual("_context")
     o.filters(0).left.asInstanceOf[Reference].key shouldEqual("a")
     o.filters(0).right should not be null
-    o.filters(0).right shouldBe a [Number]
-    o.filters(0).right.asInstanceOf[Number].value shouldEqual(3.0)
+    o.filters(0).right shouldBe a [NumberValue]
+    o.filters(0).right.asInstanceOf[NumberValue].value shouldEqual(3.0)
     o.filters(0).op shouldEqual("lt")
   }
 
@@ -120,8 +120,8 @@ class SyntaxSpec extends FlatSpec with Matchers {
     o.assignments(1) should not be null
     o.assignments(1).target shouldEqual("c")
     o.assignments(1).source should not be null
-    o.assignments(1).source shouldBe a [Number]
-    o.assignments(1).source.asInstanceOf[Number].value shouldEqual(2.0)
+    o.assignments(1).source shouldBe a [NumberValue]
+    o.assignments(1).source.asInstanceOf[NumberValue].value shouldEqual(2.0)
 
     o.assignments(2) should not be null
     o.assignments(2).target shouldEqual("d")
@@ -153,11 +153,11 @@ class SyntaxSpec extends FlatSpec with Matchers {
     arg0.args(0) shouldBe a [Reference]
     arg0.args(0).asInstanceOf[Reference].section shouldEqual("_context")
     arg0.args(0).asInstanceOf[Reference].key shouldEqual("b")
-    arg0.args(1) shouldBe a [Number]
-    arg0.args(1).asInstanceOf[Number].value shouldEqual(2.0)
+    arg0.args(1) shouldBe a [NumberValue]
+    arg0.args(1).asInstanceOf[NumberValue].value shouldEqual(2.0)
 
-    o.assignments(0).source.asInstanceOf[FunctionValue].args(1) shouldBe a [Number]
-    o.assignments(0).source.asInstanceOf[FunctionValue].args(1).asInstanceOf[Number].value shouldEqual(4.0)
+    o.assignments(0).source.asInstanceOf[FunctionValue].args(1) shouldBe a [NumberValue]
+    o.assignments(0).source.asInstanceOf[FunctionValue].args(1).asInstanceOf[NumberValue].value shouldEqual(4.0)
   }
 
   "ReduceStep" should "load from JSON" in {
@@ -282,8 +282,8 @@ class SyntaxSpec extends FlatSpec with Matchers {
     o.revisions(1).source.whens(0).left shouldBe a [Reference]
     o.revisions(1).source.whens(0).left.asInstanceOf[Reference].section shouldEqual("_context")
     o.revisions(1).source.whens(0).left.asInstanceOf[Reference].key shouldEqual("q")
-    o.revisions(1).source.whens(0).right shouldBe a [Number]
-    o.revisions(1).source.whens(0).right.asInstanceOf[Number].value shouldEqual(3.0)
+    o.revisions(1).source.whens(0).right shouldBe a [NumberValue]
+    o.revisions(1).source.whens(0).right.asInstanceOf[NumberValue].value shouldEqual(3.0)
     o.revisions(1).source.whens(0).op shouldEqual("lt")
 
     o.revisions(2) should not be null
@@ -295,8 +295,8 @@ class SyntaxSpec extends FlatSpec with Matchers {
     o.revisions(2).source.whens(0).left shouldBe a [Reference]
     o.revisions(2).source.whens(0).left.asInstanceOf[Reference].section shouldEqual("_context")
     o.revisions(2).source.whens(0).left.asInstanceOf[Reference].key shouldEqual("r")
-    o.revisions(2).source.whens(0).right shouldBe a [Number]
-    o.revisions(2).source.whens(0).right.asInstanceOf[Number].value shouldEqual(1.0)
+    o.revisions(2).source.whens(0).right shouldBe a [NumberValue]
+    o.revisions(2).source.whens(0).right.asInstanceOf[NumberValue].value shouldEqual(1.0)
     o.revisions(2).source.whens(0).op shouldEqual("eq")
   }
 }
