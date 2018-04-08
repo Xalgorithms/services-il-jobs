@@ -31,3 +31,7 @@ class FunctionValue(val name: String, val args: Seq[Value]) extends Value {
     return false
   }
 }
+
+class EmptyValue extends Value {
+  def matches(v: Value, op: String): Boolean = false
+}
