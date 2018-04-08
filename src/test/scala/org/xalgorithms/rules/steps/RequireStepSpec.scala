@@ -5,19 +5,9 @@ import org.xalgorithms.rules._
 import org.xalgorithms.rules.elements._
 import org.xalgorithms.rules.steps._
 
-import play.api.libs.json._
-import scala.io.Source
-
 class RequireSpec extends FlatSpec with Matchers {
-  class ResourceLoadTableSource extends LoadTableSource {
-    def read(ptref: PackagedTableReference): JsValue = {
-      return Json.parse(Source.fromURL(getClass.getResource(s"/${ptref.name}.json")).mkString)
-    }
-  }
-
   "RequireStep" should "load tables into the Context" in {
-    val load = new ResourceLoadTableSource()
-    val ctx = new Context(load)
+    val ctx = new Context(new ResourceLoadTableSource())
 
     val ref = new PackagedTableReference("package", "table0", "0.0.1", "table0")
     val step = new RequireStep(ref, Seq())
