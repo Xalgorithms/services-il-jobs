@@ -45,10 +45,10 @@ object StepProduce {
     (JsPath \ "source").read[JsObject]
   )(produce_assignment _)
 
-  implicit val revisionReads : Reads[Revision] = (
+  implicit val revisionReads : Reads[RevisionSource] = (
     (JsPath \ "op").read[String] and
     (JsPath \ "source").read[JsObject]
-  )(produce_revision _)
+  )(produce_revision_source _)
 
   implicit val addRevisionSourceReads : Reads[AddRevisionSource] = (
     (JsPath \ "column").read[String] and
@@ -140,22 +140,11 @@ object StepProduce {
     )
   }
 
-  def produce_revision(op: String, source: JsObject): Revision = {
-    if (op == "add") {
-      return new Revision(
-        source.validate[AddRevisionSource].getOrElse(null)
-      )
-    } else if (op == "update") {
-      return new Revision(
-        source.validate[UpdateRevisionSource].getOrElse(null)
-      )
-    } else if (op == "delete") {
-      return new Revision(
-        source.validate[DeleteRevisionSource].getOrElse(null)
-      )
-    }
-
-    return null
+  def produce_revision_source(op: String, source: JsObject): RevisionSource = op match {
+    case "add" => source.validate[AddRevisionSource].getOrElse(null)
+    case "update" => source.validate[UpdateRevisionSource].getOrElse(null)
+    case "delete" => source.validate[DeleteRevisionSource].getOrElse(null)
+    case _ => null
   }
 
   def produce_add_revision_source(column: String, table: JsObject, whens: JsArray): AddRevisionSource = {
@@ -235,7 +224,7 @@ object StepProduce {
   def produce_revise(content: JsObject): Step = {
     return new ReviseStep(
       (content \ "table").validate[Reference].getOrElse(null),
-      (content \ "revisions").validate[Seq[Revision]].getOrElse(Seq())
+      (content \ "revisions").validate[Seq[RevisionSource]].getOrElse(Seq())
     )
   }
 
