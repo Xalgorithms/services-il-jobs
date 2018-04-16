@@ -5,9 +5,9 @@ lazy val VERSION_MONGO_CONNECTOR     = "2.2.0"
 lazy val VERSION_NSCALA_TIME         = "2.18.0"
 lazy val VERSION_TYPESAFE_CONFIG     = "1.2.1"
 lazy val VERSION_FICUS               = "1.1.1"
-lazy val VERSION_SCALA_TEST          = "3.0.4"
 lazy val VERSION_PLAY_JSON           = "2.6.0"
 lazy val VERSION_JACKSON_DATABIND    = "2.6.5"
+lazy val VERSION_SCALA_TEST          = "3.0.5"
 
 lazy val settings = Seq(
   name := "xa-spark-jobs",
