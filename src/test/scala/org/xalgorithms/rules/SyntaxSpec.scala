@@ -5,11 +5,16 @@ import org.xalgorithms.rules.steps._
 import org.xalgorithms.rules.elements._
 
 import scala.io.Source
+import org.bson.BsonDocument
 import org.scalatest._
 
 class SyntaxSpec extends FlatSpec with Matchers {
   def syntax_from_source(step_name: String): Seq[Step] = {
     SyntaxFromSource(Source.fromURL(getClass.getResource(s"/${step_name}.json")))
+  }
+
+  def syntax_from_bson(step_name: String): Seq[Step] = {
+    SyntaxFromBson(BsonDocument.parse(Source.fromURL(getClass.getResource(s"/${step_name}.json")).mkString))
   }
 
   def validate_assemble(steps: Seq[Step]) {
@@ -287,16 +292,32 @@ class SyntaxSpec extends FlatSpec with Matchers {
     validate_assemble(syntax_from_source("assemble"))
   }
 
+  it should "load from BsonDocument" in {
+    validate_assemble(syntax_from_bson("assemble"))
+  }
+
   "FilterStep" should "load from JSON" in {
     validate_filter(syntax_from_source("filter"))
+  }
+
+  it should "load from BsonDocument" in {
+    validate_filter(syntax_from_bson("filter"))
   }
 
   "KeepStep" should "load from JSON" in {
     validate_keep(syntax_from_source("keep"))
   }
 
+  it should "load from BsonDocument" in {
+    validate_keep(syntax_from_bson("keep"))
+  }
+
   "MapStep" should "load from JSON" in {
     validate_map(syntax_from_source("map"))
+  }
+
+  it should "load from BsonDocument" in {
+    validate_map(syntax_from_bson("map"))
   }
 
   it should "read function usings from JSON" in {
@@ -307,6 +328,10 @@ class SyntaxSpec extends FlatSpec with Matchers {
     validate_reduce(syntax_from_source("reduce"))
   }
 
+  it should "load from BsonDocument" in {
+    validate_reduce(syntax_from_bson("reduce"))
+  }
+
   it should "read function usings from JSON" in {
     validate_reduce_functions(syntax_from_source("reduce_functions"))
   }
@@ -315,7 +340,15 @@ class SyntaxSpec extends FlatSpec with Matchers {
     validate_require(syntax_from_source("require"))
   }
 
+  it should "load from BsonDocument" in {
+    validate_require(syntax_from_bson("require"))
+  }
+
   "ReviseStep" should "load from JSON" in {
     validate_revise(syntax_from_source("revise"))
+  }
+
+  it should "load from BsonDocument" in {
+    validate_revise(syntax_from_bson("revise"))
   }
 }

@@ -1,5 +1,6 @@
 package org.xalgorithms.rules
 
+import org.bson.BsonDocument
 import play.api.libs.json._
 import play.api.libs.functional.syntax._
 import scala.io.Source
@@ -243,14 +244,27 @@ object StepProduce {
   }
 }
 
-object SyntaxFromSource {
+object SyntaxFromRaw {
   implicit val stepReads: Reads[Step] = (
     (JsPath \ "name").read[String] and
     (JsPath).read[JsObject]
   )(StepProduce.apply _)
 
-  def apply(source: Source): Seq[Step] = {
-    val res = (Json.parse(source.mkString) \ "steps").validate[Seq[Step]]
+  def apply(s: String): Seq[Step] = {
+    val res = (Json.parse(s) \ "steps").validate[Seq[Step]]
     res.getOrElse(Seq())
+  }
+}
+
+object SyntaxFromSource {
+  def apply(source: Source): Seq[Step] = {
+    SyntaxFromRaw(source.mkString)
+  }
+}
+
+object SyntaxFromBson {
+  def apply(doc: BsonDocument): Seq[Step] = {
+    // cheat for now and pull out the raw json
+    SyntaxFromRaw(doc.toJson)
   }
 }
