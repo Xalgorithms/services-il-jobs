@@ -8,9 +8,11 @@ import scala.io.Source
 import org.scalatest._
 
 class SyntaxSpec extends FlatSpec with Matchers {
-  "AssembleStep" should "load from JSON" in {
-    val source = Source.fromURL(getClass.getResource("/assemble.json"))
-    val steps = SyntaxFromSource(source)
+  def syntax_from_source(step_name: String): Seq[Step] = {
+    SyntaxFromSource(Source.fromURL(getClass.getResource(s"/${step_name}.json")))
+  }
+
+  def validate_assemble(steps: Seq[Step]) {
     steps.length shouldBe 1
     steps.head should not be null
     steps.head shouldBe a [AssembleStep]
@@ -58,9 +60,7 @@ class SyntaxSpec extends FlatSpec with Matchers {
     o.columns(1).sources(0).whens(0).op shouldEqual("eq")
   }
 
-  "FilterStep" should "load from JSON" in {
-    val source = Source.fromURL(getClass.getResource("/filter.json"))
-    val steps = SyntaxFromSource(source)
+  def validate_filter(steps: Seq[Step]) {
     steps.length shouldBe 1
     steps.head should not be null
     steps.head shouldBe a [FilterStep]
@@ -83,9 +83,7 @@ class SyntaxSpec extends FlatSpec with Matchers {
     o.filters(0).op shouldEqual("lt")
   }
 
-  "KeepStep" should "load from JSON" in {
-    val source = Source.fromURL(getClass.getResource("/keep.json"))
-    val steps = SyntaxFromSource(source)
+  def validate_keep(steps: Seq[Step]) {
     steps.length shouldBe 1
     steps.head should not be null
     steps.head shouldBe a [KeepStep]
@@ -95,9 +93,7 @@ class SyntaxSpec extends FlatSpec with Matchers {
     o.table shouldEqual("table0")
   }
 
-  "MapStep" should "load from JSON" in {
-    val source = Source.fromURL(getClass.getResource("/map.json"))
-    val steps = SyntaxFromSource(source)
+  def validate_map(steps: Seq[Step]) {
     steps.length shouldBe 1
     steps.head should not be null
     steps.head shouldBe a [MapStep]
@@ -130,9 +126,7 @@ class SyntaxSpec extends FlatSpec with Matchers {
     o.assignments(2).source.asInstanceOf[StringValue].value shouldEqual("s")
   }
 
-  it should "read function usings from JSON" in {
-    val source = Source.fromURL(getClass.getResource("/map_functions.json"))
-    val steps = SyntaxFromSource(source)
+  def validate_map_functions(steps: Seq[Step]) {
     steps.length shouldBe 1
     steps.head should not be null
     steps.head shouldBe a [MapStep]
@@ -160,9 +154,7 @@ class SyntaxSpec extends FlatSpec with Matchers {
     o.assignments(0).source.asInstanceOf[FunctionValue].args(1).asInstanceOf[NumberValue].value shouldEqual(4.0)
   }
 
-  "ReduceStep" should "load from JSON" in {
-    val source = Source.fromURL(getClass.getResource("/reduce.json"))
-    val steps = SyntaxFromSource(source)
+  def validate_reduce(steps: Seq[Step]) {
     steps.length shouldBe 1
     steps.head should not be null
     steps.head shouldBe a [ReduceStep]
@@ -194,9 +186,7 @@ class SyntaxSpec extends FlatSpec with Matchers {
     o.filters(0).op shouldEqual("eq")
   }
 
-  it should "read function usings from JSON" in {
-    val source = Source.fromURL(getClass.getResource("/reduce_functions.json"))
-    val steps = SyntaxFromSource(source)
+  def validate_reduce_functions(steps: Seq[Step]) {
     steps.length shouldBe 1
     steps.head should not be null
     steps.head shouldBe a [ReduceStep]
@@ -225,9 +215,7 @@ class SyntaxSpec extends FlatSpec with Matchers {
     o.assignments(0).source.asInstanceOf[FunctionValue].args(1).asInstanceOf[Reference].key shouldEqual("d")
   }
 
-  "RequireStep" should "load from JSON" in {
-    val source = Source.fromURL(getClass.getResource("/require.json"))
-    val steps = SyntaxFromSource(source)
+  def validate_require(steps: Seq[Step]) {
     steps.length shouldBe 1
     steps.head should not be null
     steps.head shouldBe a [RequireStep]
@@ -241,9 +229,7 @@ class SyntaxSpec extends FlatSpec with Matchers {
     o.indexes shouldEqual Seq("a", "b")
   }
 
-  "ReviseStep" should "load from JSON" in {
-    val source = Source.fromURL(getClass.getResource("/revise.json"))
-    val steps = SyntaxFromSource(source)
+  def validate_revise(steps: Seq[Step]) {
     steps.length shouldBe 1
     steps.head should not be null
     steps.head shouldBe a [ReviseStep]
@@ -295,5 +281,41 @@ class SyntaxSpec extends FlatSpec with Matchers {
     o.revisions(2).whens(0).right shouldBe a [NumberValue]
     o.revisions(2).whens(0).right.asInstanceOf[NumberValue].value shouldEqual(1.0)
     o.revisions(2).whens(0).op shouldEqual("eq")
+  }
+
+  "AssembleStep" should "load from JSON" in {
+    validate_assemble(syntax_from_source("assemble"))
+  }
+
+  "FilterStep" should "load from JSON" in {
+    validate_filter(syntax_from_source("filter"))
+  }
+
+  "KeepStep" should "load from JSON" in {
+    validate_keep(syntax_from_source("keep"))
+  }
+
+  "MapStep" should "load from JSON" in {
+    validate_map(syntax_from_source("map"))
+  }
+
+  it should "read function usings from JSON" in {
+    validate_map_functions(syntax_from_source("map_functions"))
+  }
+
+  "ReduceStep" should "load from JSON" in {
+    validate_reduce(syntax_from_source("reduce"))
+  }
+
+  it should "read function usings from JSON" in {
+    validate_reduce_functions(syntax_from_source("reduce_functions"))
+  }
+
+  "RequireStep" should "load from JSON" in {
+    validate_require(syntax_from_source("require"))
+  }
+
+  "ReviseStep" should "load from JSON" in {
+    validate_revise(syntax_from_source("revise"))
   }
 }
