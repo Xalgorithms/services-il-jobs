@@ -4,6 +4,7 @@ import org.xalgorithms.rules.elements.{ PackagedTableReference, Value }
 
 class Context(load: LoadTableSource) {
   var _tables: scala.collection.mutable.Map[String, Seq[Map[String, Value]]] = scala.collection.mutable.Map()
+  var _revisions: scala.collection.mutable.Map[String, scala.collection.mutable.Seq[Revision]] = scala.collection.mutable.Map()
 
   def load(ptref: PackagedTableReference) {
     _tables(ptref.name) = load.load(ptref)
@@ -21,5 +22,14 @@ class Context(load: LoadTableSource) {
     }
 
     return Seq()
+  }
+
+  def revisions(): Map[String, Seq[Revision]] = {
+    return _revisions.toMap
+  }
+
+  def add_revision(key: String, rev: Revision) {
+    val current = _revisions.getOrElse(key, scala.collection.mutable.Seq())
+    _revisions.put(key, current ++ scala.collection.mutable.Seq(rev))
   }
 }
