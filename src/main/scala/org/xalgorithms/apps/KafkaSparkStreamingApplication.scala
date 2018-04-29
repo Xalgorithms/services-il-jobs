@@ -64,7 +64,7 @@ class KafkaSparkStreamingApplication(cfg: ApplicationConfig) extends BaseApplica
   type T = String
 
   def act(output: DStream[T], sink: Map[String, String], topic: String, ctx: SparkContext = null): Unit = {
-    import KafkaSink._
+    import KafkaStreamSink._
     output.send(sink, topic)
   }
 }
@@ -117,7 +117,7 @@ object KafkaSource {
   def apply(cfg: Map[String, String]): KafkaSource = new KafkaSource(cfg)
 }
 
-class KafkaSinkBase[T](@transient private val st: DStream[T]) extends Serializable {
+class KafkaSink() extends Serializable {
   private val Producers = mutable.Map[Map[String, Object], KafkaProducer[String, String]]()
 
   def maybeMakeProducer(cfg: Map[String, Object]): KafkaProducer[String, String] = {
@@ -139,7 +139,7 @@ class KafkaSinkBase[T](@transient private val st: DStream[T]) extends Serializab
   }
 }
 
-class KafkaSink(@transient private val st: DStream[String]) extends KafkaSinkBase(st) {
+class KafkaStreamSink(@transient private val st: DStream[String]) extends KafkaSink {
   def send(cfg: Map[String, String], topic: String): Unit = {
     st.foreachRDD { rdd =>
       rdd.foreachPartition { recs =>
@@ -155,19 +155,17 @@ class KafkaSink(@transient private val st: DStream[String]) extends KafkaSinkBas
       }
     }
   }
-
-
 }
 
-object KafkaSink {
+object KafkaStreamSink {
   import scala.language.implicitConversions
 
-  implicit def createKafkaSink(st: DStream[String]): KafkaSink = {
-    new KafkaSink(st)
+  implicit def createKafkaStreamSink(st: DStream[String]): KafkaStreamSink = {
+    new KafkaStreamSink(st)
   }
 }
 
-class KafkaMongoSink(@transient private val st: DStream[(String, String)]) extends KafkaSinkBase(st) {
+class KafkaMongoSink(@transient private val st: DStream[(String, String)]) extends KafkaSink {
   def send(cfg: Map[String, String], topic: String, ctx: SparkContext): Unit = {
     val writeConfig = WriteConfig(Map("collection" -> "revision", "writeConcern.w" -> "majority", "replaceDocument" -> "false"), Some(WriteConfig(ctx)))
     val mongoConnector = MongoConnector(writeConfig.asOptions)
