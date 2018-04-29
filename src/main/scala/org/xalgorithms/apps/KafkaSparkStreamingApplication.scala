@@ -22,7 +22,7 @@ import scala.collection.JavaConverters._
 
 
 // The job might be run on one of the executors, hence it should be serializable
-abstract class BaseApplication(cfg: ApplicationConfig) extends Serializable {
+abstract class KafkaStreamingApplication(cfg: ApplicationConfig) extends Serializable {
   type T
 
   def batch_duration: FiniteDuration = cfg.batch_duration
@@ -60,7 +60,7 @@ abstract class BaseApplication(cfg: ApplicationConfig) extends Serializable {
   def act(output: DStream[T], sink: Map[String, String], topic: String, ctx: SparkContext = null): Unit
 }
 
-class KafkaSparkStreamingApplication(cfg: ApplicationConfig) extends BaseApplication(cfg: ApplicationConfig) {
+class KafkaSparkStreamingApplication(cfg: ApplicationConfig) extends KafkaStreamingApplication(cfg: ApplicationConfig) {
   type T = String
 
   def act(output: DStream[T], sink: Map[String, String], topic: String, ctx: SparkContext = null): Unit = {
@@ -69,7 +69,7 @@ class KafkaSparkStreamingApplication(cfg: ApplicationConfig) extends BaseApplica
   }
 }
 
-class KafkaMongoSparkStreamingApplication(cfg: ApplicationConfig) extends BaseApplication(cfg: ApplicationConfig) {
+class KafkaMongoSparkStreamingApplication(cfg: ApplicationConfig) extends KafkaStreamingApplication(cfg: ApplicationConfig) {
   type T = (String, String)
 
   def act(output: DStream[T], sink: Map[String, String], topic: String, ctx: SparkContext): Unit = {
