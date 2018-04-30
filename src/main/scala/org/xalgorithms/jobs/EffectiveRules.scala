@@ -103,8 +103,9 @@ object Effective {
 
 class EffectiveRules(cfg: ApplicationConfig) extends KafkaSparkStreamingApplication(cfg) {
   def execute(): Unit = {
-    with_context(cfg, { (ctx, sctx, input) =>
+    with_context(cfg, { (ctx, sctx, events, input) =>
       // create a paired dstream on the effective table (K: party, V: (rule_id, Effective))
+      events.value.info("starting")
       val effective_paired_stream = new ConstantInputDStream(
         sctx, sctx.cassandraTable("xadf", "effective")
       ).map { cr => cr.getString("party") -> Tuple2(cr.getString("rule_id"), Effective(cr)) }
@@ -124,6 +125,7 @@ class EffectiveRules(cfg: ApplicationConfig) extends KafkaSparkStreamingApplicat
         .filter { tup => tup._2._2.matches(tup._1._2) }
         // build the result (document_id:rule_id)
         .map { tup =>
+          events.value.gave("delivering", Map("document_id" -> tup._1._1, "rule_id" -> tup._2._1))
           tup._1._1 + ":" + tup._2._1
         }
     })

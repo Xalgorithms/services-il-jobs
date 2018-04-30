@@ -53,7 +53,7 @@ class ExecuteRules(cfg: ApplicationConfig) extends KafkaMongoSparkStreamingAppli
   }
 
   def execute(): Unit = {
-    with_context(cfg, {(ctx, sctx, input) =>
+    with_context(cfg, {(ctx, sctx, events, input) =>
       val uri = ctx.getConf.get("spark.mongodb.input.uri")
 
       val docReadConfig = ReadConfig(Map("uri" -> uri, "collection" -> "documents"))
