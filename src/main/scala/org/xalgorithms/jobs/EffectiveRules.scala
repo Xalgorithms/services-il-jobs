@@ -10,6 +10,18 @@ import org.xalgorithms.apps._
 class Envelope(
   val country: Option[String], val region: Option[String],
   val timezone: Option[String], val issued: Option[DateTime]) extends Serializable {
+
+  def asString(): String = {
+    Map(
+      "country" -> country, "region" -> region,
+      "timezone" -> timezone, "issued" -> issued).foldLeft(Seq[String]()) { case (seq, (k, v)) =>
+        if (v.nonEmpty) {
+          seq :+ s"${k}=${v.get}"
+        } else {
+          seq
+        }
+    }.mkString("; ")
+  }
 }
 
 object Envelope {
@@ -25,6 +37,18 @@ object Envelope {
 class Effective(
   val country: Option[String], val region: Option[String], val timezone: Option[String],
   val starts: Option[DateTime], val ends: Option[DateTime]) extends Serializable {
+
+  def asString(): String = {
+    Map(
+      "country" -> country, "region" -> region,
+      "timezone" -> timezone, "starts" -> starts, "ends" -> ends).foldLeft(Seq[String]()) { case (seq, (k, v)) =>
+        if (v.nonEmpty) {
+          seq :+ s"${k}=${v.get}"
+        } else {
+          seq
+        }
+    }.mkString("; ")
+  }
 
   def matches(e: Envelope): Boolean = {
     is_global_or_matching_jurisdication(e.country, e.region) &&
@@ -114,7 +138,13 @@ class EffectiveRules(cfg: ApplicationConfig) extends KafkaSparkStreamingApplicat
       // where the document_id == the input document_id
       val document_paired_stream = input.map(Tuple1(_))
         .joinWithCassandraTable("xadf", "envelopes", AllColumns, SomeColumns("document_id"))
-        .map { tup => tup._2.getString("party") -> Tuple2(tup._2.getString("document_id"), Envelope(tup._2)) }
+        .map { tup =>
+          val party = tup._2.getString("party")
+          val document_id = tup._2.getString("document_id")
+          val e = Envelope(tup._2)
+          events.value.info("mapping input document party to Envelope", Map("party" -> party, "document_id" -> document_id, "envelope" -> e.asString()))
+          party -> Tuple2(document_id, e)
+        }
 
       // join the two streams to create (K: party, (Envelope, Effective))
       // similar to inner join on party==party from the two tables
@@ -122,7 +152,11 @@ class EffectiveRules(cfg: ApplicationConfig) extends KafkaSparkStreamingApplicat
         // just keep the values
         .map(_._2)
         // filter with Effective.matches
-        .filter { tup => tup._2._2.matches(tup._1._2) }
+        .filter { tup =>
+          val matches = tup._2._2.matches(tup._1._2)
+          events.value.info("matching envelope to effective", Map("matches" -> matches.toString, "envelope" -> tup._2._2.asString, "effective" -> tup._1._2.asString))
+          matches
+        }
         // build the result (document_id:rule_id)
         .map { tup =>
           events.value.gave("delivering", Map("document_id" -> tup._1._1, "rule_id" -> tup._2._1))
