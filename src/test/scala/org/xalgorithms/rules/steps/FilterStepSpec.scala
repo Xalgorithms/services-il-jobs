@@ -11,7 +11,7 @@ class FilterStepSpec extends FlatSpec with Matchers {
     ctx.load(new PackagedTableReference("package", "table2", "0.0.1", "table2"))
 
     val step = new FilterStep(
-      new Reference("table", "table2"),
+      new TableReference("table", "table2"),
       Seq(new When(new Reference("_context", "a"), new Reference("_context", "d"), "eq")))
 
     step.execute(ctx)
@@ -47,7 +47,7 @@ class FilterStepSpec extends FlatSpec with Matchers {
     ctx.load(new PackagedTableReference("package", "table2", "0.0.1", "table2"))
 
     val step = new FilterStep(
-      new Reference("table", "table2"),
+      new TableReference("table", "table2"),
       Seq(new When(new Reference("_context", "b"), new Reference("_context", "c"), "eq")))
 
     step.execute(ctx)

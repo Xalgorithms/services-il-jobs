@@ -1,9 +1,9 @@
 package org.xalgorithms.rules.steps
 
 import org.xalgorithms.rules.{ Context, Change, ChangeOps, Revision }
-import org.xalgorithms.rules.elements.{ Reference, RevisionSource, UpdateRevisionSource, Value }
+import org.xalgorithms.rules.elements.{ RevisionSource, TableReference, UpdateRevisionSource, Value }
 
-class ReviseStep(val table: Reference, val revisions: Seq[RevisionSource]) extends Step {
+class ReviseStep(val table: TableReference, val revisions: Seq[RevisionSource]) extends Step {
   def execute(ctx: Context) {
     val all_changes = revisions.foldLeft(Seq[Map[String, Change]]()) { (seq, src) =>
       val changes = changes_from_source(ctx, src)

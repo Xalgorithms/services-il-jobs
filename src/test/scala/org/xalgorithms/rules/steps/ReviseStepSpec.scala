@@ -12,13 +12,13 @@ class ReviseStepSpec extends FlatSpec with Matchers {
     ctx.load(new PackagedTableReference("package", "table2_updates", "0.0.1", "table2_updates"))
 
     val step = new ReviseStep(
-      new Reference("table", "table2"),
+      new TableReference("table", "table2"),
       Seq(
         new UpdateRevisionSource(
-          "a", Seq(), new Reference("table", "table2_updates")
+          "a", Seq(), new TableReference("table", "table2_updates")
         ),
         new UpdateRevisionSource(
-          "b", Seq(), new Reference("table", "table2_updates")
+          "b", Seq(), new TableReference("table", "table2_updates")
         )
       )
     )

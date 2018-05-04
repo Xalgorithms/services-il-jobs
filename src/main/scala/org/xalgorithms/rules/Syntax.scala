@@ -19,6 +19,11 @@ object StepProduce {
     (JsPath \ "key").read[String]
   )(produce_reference _)
 
+  implicit val tableReferenceReads: Reads[TableReference] = (
+    (JsPath \ "section").read[String] and
+    (JsPath \ "key").read[String]
+  )(produce_table_reference _)
+
   implicit val colsSourceReads: Reads[ColumnsTableSource] = (
     (JsPath \ "columns").read[JsArray] and
     (JsPath \ "whens").read[JsArray]
@@ -152,7 +157,7 @@ object StepProduce {
     return new AddRevisionSource(
       column,
       whens.validate[Seq[When]].getOrElse(Seq()),
-      table.validate[Reference].getOrElse(null)
+      table.validate[TableReference].getOrElse(null)
     )
   }
 
@@ -160,7 +165,7 @@ object StepProduce {
     return new UpdateRevisionSource(
       column,
       whens.validate[Seq[When]].getOrElse(Seq()),
-      table.validate[Reference].getOrElse(null)
+      table.validate[TableReference].getOrElse(null)
     )
   }
 
@@ -183,6 +188,10 @@ object StepProduce {
     return new Reference(section, key)
   }
 
+  def produce_table_reference(section: String, key: String): TableReference = {
+    return new TableReference(section, key)
+  }
+
   def produce_assemble(content: JsObject): Step = {
     return new AssembleStep(
       stringOrNull(content, "table_name"),
@@ -192,7 +201,7 @@ object StepProduce {
 
   def produce_filter(content: JsObject): Step = {
     return new FilterStep(
-      (content \ "table").validate[Reference].getOrElse(null),
+      (content \ "table").validate[TableReference].getOrElse(null),
       (content \ "filters").validate[Seq[When]].getOrElse(Seq())
     )
   }
@@ -203,7 +212,7 @@ object StepProduce {
 
   def produce_map(content: JsObject): Step = {
     return new MapStep(
-      (content \ "table").validate[Reference].getOrElse(null),
+      (content \ "table").validate[TableReference].getOrElse(null),
       (content \ "assignments").validate[Seq[Assignment]].getOrElse(Seq())
     )
   }
@@ -211,7 +220,7 @@ object StepProduce {
   def produce_reduce(content: JsObject): Step = {
     return new ReduceStep(
       (content \ "filters").validate[Seq[When]].getOrElse(Seq()),
-      (content \ "table").validate[Reference].getOrElse(null),
+      (content \ "table").validate[TableReference].getOrElse(null),
       (content \ "assignments").validate[Seq[Assignment]].getOrElse(Seq())
     )
   }
@@ -224,7 +233,7 @@ object StepProduce {
 
   def produce_revise(content: JsObject): Step = {
     return new ReviseStep(
-      (content \ "table").validate[Reference].getOrElse(null),
+      (content \ "table").validate[TableReference].getOrElse(null),
       (content \ "revisions").validate[Seq[RevisionSource]].getOrElse(Seq())
     )
   }

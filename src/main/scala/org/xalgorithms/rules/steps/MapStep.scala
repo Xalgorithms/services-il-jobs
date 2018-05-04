@@ -3,7 +3,7 @@ package org.xalgorithms.rules.steps
 import org.xalgorithms.rules.{ Context }
 import org.xalgorithms.rules.elements._
 
-class MapStep(table: Reference, assignments: Seq[Assignment]) extends AssignmentStep(table, assignments) {
+class MapStep(table: TableReference, assignments: Seq[Assignment]) extends AssignmentStep(table, assignments) {
   def execute(ctx: Context) {
     val tbl = ctx.find_in_section(table.section, table.key)
     ctx.retain(table.section, table.key, tbl.map { row =>

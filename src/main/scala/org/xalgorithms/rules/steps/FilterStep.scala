@@ -1,9 +1,9 @@
 package org.xalgorithms.rules.steps
 
 import org.xalgorithms.rules.{ Context }
-import org.xalgorithms.rules.elements.{ Reference, When }
+import org.xalgorithms.rules.elements.{ Reference, TableReference, When }
 
-class FilterStep(val table: Reference, val filters: Seq[When]) extends Step {
+class FilterStep(val table: TableReference, val filters: Seq[When]) extends Step {
   def execute(ctx: Context) {
     val tbl = ctx.find_in_section(table.section, table.key)
 
