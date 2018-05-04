@@ -4,12 +4,6 @@ abstract class Value {
   def matches(v: Value, op: String): Boolean
 }
 
-class Reference(val section: String, val key: String) extends Value {
-  def matches(v: Value, op: String): Boolean = {
-    return false
-  }
-}
-
 class NumberValue(val value: BigDecimal) extends Value {
   def matches(v: Value, op: String): Boolean = v match {
     case (sv: StringValue) => value == BigDecimal(sv.value)

@@ -16,6 +16,14 @@ class Context(load: LoadTableSource) {
     }
   }
 
+  def lookup_map_in_section(section: String, key: String): Map[String, Value] = {
+    Map()
+  }
+
+  def lookup_table_in_section(section: String, key: String): Seq[Map[String, Value]] = {
+    Seq()
+  }
+
   def find_in_section(name: String, key: String): Seq[Map[String, Value]] = {
     if ("table" == name) {
       return _tables.getOrElse(key, null)
