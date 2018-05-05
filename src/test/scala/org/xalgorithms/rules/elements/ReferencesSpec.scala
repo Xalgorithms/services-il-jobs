@@ -29,18 +29,23 @@ class ReferencesSpec extends FlatSpec with Matchers with MockFactory {
     m.map { case (k, v) => (k, new StringValue(v)) }
   }
 
-  "MapReference" should "load maps from the Context" in {
+  "MapReference" should "load map keys from the Context" in {
     val maps = Map(
       "map0" -> Map("a" -> "00", "b" -> "01"),
-      "map1" -> Map("A" -> "xx", "B" -> "yy"))
+      "map1" -> Map("a" -> "xx", "b" -> "yy"))
     val ctx = mock[Context]
 
-    maps.foreach { case (key, ex) =>
+    maps.foreach { case (name, ex) =>
       val expected = map_to_expected(ex)
-      val ref = new MapReference("maps", key)
+      ex.keySet.foreach { k =>
+        val ref = new MapReference(name, k)
 
-      (ctx.lookup_map_in_section _).expects("maps", key).returning(expected)
-      ref.get(ctx) shouldEqual(expected)
+        (ctx.lookup_in_map _).expects(name, k).returning(new StringValue(ex(k)))
+
+        val v = ref.get(ctx)
+        v shouldBe a [StringValue]
+        v.asInstanceOf[StringValue].value shouldEqual(ex(k))
+      }
     }
   }
 
@@ -58,7 +63,7 @@ class ReferencesSpec extends FlatSpec with Matchers with MockFactory {
       val expected = ex.map(map_to_expected)
       val ref = new TableReference("tables", key)
 
-      (ctx.lookup_table_in_section _).expects("tables", key).returning(expected)
+      (ctx.lookup_table _).expects("tables", key).returning(expected)
       ref.get(ctx) shouldEqual(expected)
     }
   }

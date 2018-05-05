@@ -14,9 +14,9 @@ class Reference(val section: String, val key: String) extends Value {
   }
 }
 
-class TableReference(section: String, key: String) extends Reference(section, key) {
+class TableReference(section: String, table_name: String) extends Reference(section, table_name) {
   def get(ctx: Context): Seq[Map[String, Value]] = {
-    ctx.lookup_table_in_section(section, key)
+    ctx.lookup_table(section, table_name)
   }
 
   override def matches(v: Value, op: String): Boolean = v match {
@@ -26,8 +26,8 @@ class TableReference(section: String, key: String) extends Reference(section, ke
 }
 
 class MapReference(section: String, key: String) extends Reference(section, key) {
-  def get(ctx: Context): Map[String, Value] = {
-    ctx.lookup_map_in_section(section, key)
+  def get(ctx: Context): Value = {
+    ctx.lookup_in_map(section, key)
   }
 
   override def matches(v: Value, op: String): Boolean = v match {
