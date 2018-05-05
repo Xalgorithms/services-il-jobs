@@ -25,13 +25,13 @@ class TableReference(section: String, table_name: String) extends Reference(sect
   }
 }
 
-class MapReference(section: String, key: String) extends Reference(section, key) {
+class DocumentValueReference(section: String, key: String) extends Reference(section, key) {
   def get(ctx: Context): Value = {
     ctx.lookup_in_map(section, key)
   }
 
   override def matches(v: Value, op: String): Boolean = v match {
-    case (mrv: MapReference) => super.matches(v, op)
+    case (mrv: DocumentValueReference) => super.matches(v, op)
     case _ => false
   }
 }
@@ -47,7 +47,7 @@ class ScalarReferenceContext(reference: Reference) extends ReferenceContext(refe
 
 object MakeReference {
   def apply(section: String, key: String): Reference = section match {
-    case "envelope" => new MapReference(section, key)
+    case "envelope" => new DocumentValueReference(section, key)
     case _ => new TableReference(section, key)
   }
 }

@@ -7,10 +7,10 @@ import org.xalgorithms.rules._
 import org.xalgorithms.rules.elements._
 
 class ReferencesSpec extends FlatSpec with Matchers with MockFactory {
-  "MakeReference" should "yield a MapReference in the case of the envelope section" in {
+  "MakeReference" should "yield a DocumentValueReference in the case of the envelope section" in {
     val ref = MakeReference("envelope", "foo")
 
-    ref shouldBe a [MapReference]
+    ref shouldBe a [DocumentValueReference]
     ref.section shouldEqual("envelope")
     ref.key shouldEqual("foo")
   }
@@ -29,7 +29,7 @@ class ReferencesSpec extends FlatSpec with Matchers with MockFactory {
     m.map { case (k, v) => (k, new StringValue(v)) }
   }
 
-  "MapReference" should "load map keys from the Context" in {
+  "DocumentValueReference" should "load map keys from the Context" in {
     val maps = Map(
       "map0" -> Map("a" -> "00", "b" -> "01"),
       "map1" -> Map("a" -> "xx", "b" -> "yy"))
@@ -38,7 +38,7 @@ class ReferencesSpec extends FlatSpec with Matchers with MockFactory {
     maps.foreach { case (name, ex) =>
       val expected = map_to_expected(ex)
       ex.keySet.foreach { k =>
-        val ref = new MapReference(name, k)
+        val ref = new DocumentValueReference(name, k)
 
         (ctx.lookup_in_map _).expects(name, k).returning(new StringValue(ex(k)))
 
@@ -96,14 +96,14 @@ class ReferencesSpec extends FlatSpec with Matchers with MockFactory {
     val ref0 = new TableReference("a", "x")
 
     ref0.matches(new TableReference("a", "x"), "eq") shouldEqual(true)
-    ref0.matches(new MapReference("a", "x"), "eq") shouldEqual(false)
+    ref0.matches(new DocumentValueReference("a", "x"), "eq") shouldEqual(false)
     ref0.matches(new Reference("a", "x"), "eq") shouldEqual(false)
   }
 
-  "MapReference" should "match equivalent map references" in {
-    val ref0 = new MapReference("a", "x")
+  "DocumentValueReference" should "match equivalent map references" in {
+    val ref0 = new DocumentValueReference("a", "x")
 
-    ref0.matches(new MapReference("a", "x"), "eq") shouldEqual(true)
+    ref0.matches(new DocumentValueReference("a", "x"), "eq") shouldEqual(true)
     ref0.matches(new TableReference("a", "x"), "eq") shouldEqual(false)
     ref0.matches(new Reference("a", "x"), "eq") shouldEqual(false)
   }
