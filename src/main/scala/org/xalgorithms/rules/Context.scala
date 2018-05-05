@@ -4,19 +4,12 @@ import org.xalgorithms.rules.elements.{ PackagedTableReference, Value }
 import scala.collection.mutable
 
 class Context(load: LoadTableSource) {
-  var _tables = mutable.Map[String, Seq[Map[String, Value]]]()
-  var _new_tables = mutable.Map[String, mutable.Map[String, Seq[Map[String, Value]]]]()
+  var _tables = mutable.Map[String, mutable.Map[String, Seq[Map[String, Value]]]]()
   var _revisions = mutable.Map[String, mutable.Seq[Revision]]()
   var _maps = mutable.Map[String, Map[String, Value]]()
 
   def load(ptref: PackagedTableReference) {
-    _tables(ptref.name) = load.load(ptref)
-  }
-
-  def retain(section: String, name: String, tbl: Seq[Map[String, Value]]) {
-    if ("table" == section) {
-      _tables(name) = tbl
-    }
+    retain_table("table", ptref.name, load.load(ptref))
   }
 
   def retain_map(section: String, m: Map[String, Value]) {
@@ -24,9 +17,9 @@ class Context(load: LoadTableSource) {
   }
 
   def retain_table(section: String, key: String, t: Seq[Map[String, Value]]) {
-    var sm = _new_tables.getOrElse(section, mutable.Map[String, Seq[Map[String, Value]]]())
+    val sm = _tables.getOrElse(section, mutable.Map[String, Seq[Map[String, Value]]]())
     sm.put(key, t)
-    _new_tables(section) = sm
+    _tables(section) = sm
   }
 
   def lookup_in_map(section: String, key: String): Value = {
@@ -34,15 +27,7 @@ class Context(load: LoadTableSource) {
   }
 
   def lookup_table(section: String, table_name: String): Seq[Map[String, Value]] = {
-    _new_tables.getOrElse(section, mutable.Map[String, Seq[Map[String, Value]]]()).getOrElse(table_name, null)
-  }
-
-  def find_in_section(name: String, key: String): Seq[Map[String, Value]] = {
-    if ("table" == name) {
-      return _tables.getOrElse(key, null)
-    }
-
-    return Seq()
+    _tables.getOrElse(section, mutable.Map[String, Seq[Map[String, Value]]]()).getOrElse(table_name, null)
   }
 
   def revisions(): Map[String, Seq[Revision]] = {

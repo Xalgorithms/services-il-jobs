@@ -15,7 +15,7 @@ class AssembleStep(val name: String, val columns: Seq[Column]) extends Step {
 
       val cols_source = src.asInstanceOf[ColumnsTableSource]
       if (null != cols_source) {
-        stbl = ctx.find_in_section(col.table.section, col.table.key).map { o =>
+        stbl = ctx.lookup_table(col.table.section, col.table.key).map { o =>
           o.filterKeys { k =>
             cols_source.columns.length == 0 || cols_source.columns.contains(k)
           }
@@ -28,6 +28,6 @@ class AssembleStep(val name: String, val columns: Seq[Column]) extends Step {
       if (tbl.length == 0) stbl else tbl.map { r0 => stbl.map { r1 => r0 ++ r1 } }.flatten
     }
 
-    ctx.retain("table", name, combined_tbl)
+    ctx.retain_table("table", name, combined_tbl)
   }
 }

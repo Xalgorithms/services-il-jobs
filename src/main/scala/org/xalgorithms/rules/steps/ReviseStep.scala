@@ -19,7 +19,7 @@ class ReviseStep(val table: TableReference, val revisions: Seq[RevisionSource]) 
   }
 
   def changes_from_update(ctx: Context, src: UpdateRevisionSource): Seq[Map[String, Change]] = {
-    val tbl = ctx.find_in_section(src.table.section, src.table.key)
+    val tbl = ctx.lookup_table(src.table.section, src.table.key)
     tbl.map { r => Map(src.column -> new Change(ChangeOps.Update, r(src.column))) }
   }
 }

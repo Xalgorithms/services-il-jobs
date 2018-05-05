@@ -16,7 +16,7 @@ class FilterStepSpec extends FlatSpec with Matchers {
 
     step.execute(ctx)
 
-    val tbl = ctx.find_in_section("table", "table2")
+    val tbl = ctx.lookup_table("table", "table2")
     tbl should not be null
     tbl.length shouldEqual(3)
 
@@ -52,7 +52,7 @@ class FilterStepSpec extends FlatSpec with Matchers {
 
     step.execute(ctx)
 
-    val tbl = ctx.find_in_section("table", "table2")
+    val tbl = ctx.lookup_table("table", "table2")
     tbl should not be null
     tbl.length shouldEqual(3)
 

@@ -5,8 +5,8 @@ import org.xalgorithms.rules.elements._
 
 class MapStep(table: TableReference, assignments: Seq[Assignment]) extends AssignmentStep(table, assignments) {
   def execute(ctx: Context) {
-    val tbl = ctx.find_in_section(table.section, table.key)
-    ctx.retain(table.section, table.key, tbl.map { row =>
+    val tbl = ctx.lookup_table(table.section, table.key)
+    ctx.retain_table(table.section, table.key, tbl.map { row =>
       row ++ assignments.foldLeft(Map[String, Value]()) { (o, ass) =>
         val av = resolve_to_atomic_value(row, ass.source)
 

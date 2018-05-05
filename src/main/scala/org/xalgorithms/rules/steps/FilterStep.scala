@@ -5,9 +5,9 @@ import org.xalgorithms.rules.elements.{ Reference, TableReference, When }
 
 class FilterStep(val table: TableReference, val filters: Seq[When]) extends Step {
   def execute(ctx: Context) {
-    val tbl = ctx.find_in_section(table.section, table.key)
+    val tbl = ctx.lookup_table(table.section, table.key)
 
-    ctx.retain(table.section, table.key, tbl.filter { r =>
+    ctx.retain_table(table.section, table.key, tbl.filter { r =>
       filters.foldLeft(false) { (v, wh) =>
         val lr = wh.left.asInstanceOf[Reference]
         val rr = wh.right.asInstanceOf[Reference]

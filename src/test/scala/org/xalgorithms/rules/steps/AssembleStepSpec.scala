@@ -28,7 +28,7 @@ class AssembleStepSpec extends FlatSpec with Matchers {
 
     step.execute(ctx)
 
-    val tbl = ctx.find_in_section("table", "table_assemble")
+    val tbl = ctx.lookup_table("table", "table_assemble")
     tbl should not be null
     tbl.length shouldEqual(3)
     tbl(0)("a") shouldBe a [NumberValue]
