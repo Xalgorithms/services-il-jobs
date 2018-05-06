@@ -178,7 +178,7 @@ object StepProduce {
 
   def produce_column(table_reference: JsObject, sources: JsArray): Column = {
     return new Column(
-      table_reference.validate[Reference].getOrElse(null),
+      table_reference.validate[TableReference].getOrElse(null),
       sources.validate[Seq[ColumnsTableSource]].getOrElse(Seq()) ++
         sources.validate[Seq[ColumnTableSource]].getOrElse(Seq())
     )

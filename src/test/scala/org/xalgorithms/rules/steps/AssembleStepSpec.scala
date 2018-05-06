@@ -12,12 +12,12 @@ class AssembleStepSpec extends FlatSpec with Matchers {
     // two simple COLUMNS
     // ALL columns, no conditions
     val cols0 = new Column(
-      new Reference("table", "table0"),
+      new TableReference("table", "table0"),
       Seq(new ColumnsTableSource(Seq(), Seq()))
     )
     // only (aa, bb), no conditions
     val cols1 = new Column(
-      new Reference("table", "table1"),
+      new TableReference("table", "table1"),
       Seq(new ColumnsTableSource(Seq("aa", "bb"), Seq()))
     )
 
