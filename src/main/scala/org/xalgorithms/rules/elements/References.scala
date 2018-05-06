@@ -25,7 +25,11 @@ class TableReference(section: String, table_name: String) extends Reference(sect
   }
 }
 
-class DocumentValueReference(section: String, key: String) extends Reference(section, key) {
+abstract class ValueReference(section: String, key: String) extends Reference(section, key) {
+  def get(ctx: Context): Value
+}
+
+class DocumentValueReference(section: String, key: String) extends ValueReference(section, key) {
   def get(ctx: Context): Value = {
     ctx.lookup_in_map(section, key)
   }
@@ -36,6 +40,9 @@ class DocumentValueReference(section: String, key: String) extends Reference(sec
   }
 }
 
+// TODO: _local and _context value references
+
+// TODO: decide if these are useful
 class ReferenceContext(val reference: Reference) {
 }
 
