@@ -14,11 +14,6 @@ object StepProduce {
     (JsPath \ "sources").read[JsArray]
   )(produce_column _)
 
-  implicit val referenceReads: Reads[Reference] = (
-    (JsPath \ "section").read[String] and
-    (JsPath \ "key").read[String]
-  )(produce_reference _)
-
   implicit val tableReferenceReads: Reads[TableReference] = (
     (JsPath \ "section").read[String] and
     (JsPath \ "key").read[String]
@@ -126,10 +121,7 @@ object StepProduce {
     } else if ("number" == vt) {
       return new NumberValue(doubleOrNull(content, "value"))
     } else if ("reference" == vt) {
-      return new Reference(
-        stringOrNull(content, "section"),
-        stringOrNull(content, "key")
-      )
+      return MakeReference(stringOrNull(content, "section"), stringOrNull(content, "key"))
     } else if ("function" == vt) {
       return new FunctionValue(
         stringOrNull(content, "name"),
@@ -182,10 +174,6 @@ object StepProduce {
       sources.validate[Seq[ColumnsTableSource]].getOrElse(Seq()) ++
         sources.validate[Seq[ColumnTableSource]].getOrElse(Seq())
     )
-  }
-
-  def produce_reference(section: String, key: String): Reference = {
-    return new Reference(section, key)
   }
 
   def produce_table_reference(section: String, key: String): TableReference = {

@@ -40,21 +40,11 @@ class DocumentValueReference(section: String, key: String) extends ValueReferenc
   }
 }
 
-// TODO: _local and _context value references
-
-// TODO: decide if these are useful
-class ReferenceContext(val reference: Reference) {
-}
-
-class TableReferenceContext(reference: Reference) extends ReferenceContext(reference) {
-}
-
-class ScalarReferenceContext(reference: Reference) extends ReferenceContext(reference) {
-}
-
 object MakeReference {
   def apply(section: String, key: String): Reference = section match {
     case "envelope" => new DocumentValueReference(section, key)
+    case "_local" => new DocumentValueReference(section, key)
+    case "_context" => new DocumentValueReference(section, key)
     case _ => new TableReference(section, key)
   }
 }
