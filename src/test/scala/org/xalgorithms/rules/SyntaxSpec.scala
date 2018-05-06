@@ -29,7 +29,7 @@ class SyntaxSpec extends FlatSpec with Matchers {
 
     o.columns(0).table should not be null
     o.columns(0).table.section shouldEqual("tables")
-    o.columns(0).table.key shouldEqual("table0")
+    o.columns(0).table.name shouldEqual("table0")
     o.columns(0).sources.length shouldBe 1
     o.columns(0).sources(0) should not be null
     o.columns(0).sources(0) shouldBe a [ColumnsTableSource]
@@ -37,9 +37,9 @@ class SyntaxSpec extends FlatSpec with Matchers {
     o.columns(0).sources(0).whens.length shouldBe 1
     o.columns(0).sources(0).whens(0) should not be null
     o.columns(0).sources(0).whens(0).left should not be null
-    o.columns(0).sources(0).whens(0).left shouldBe a [Reference]
-    o.columns(0).sources(0).whens(0).left.asInstanceOf[Reference].section shouldEqual("_context")
-    o.columns(0).sources(0).whens(0).left.asInstanceOf[Reference].key shouldEqual("a")
+    o.columns(0).sources(0).whens(0).left shouldBe a [ReferenceValue]
+    o.columns(0).sources(0).whens(0).left.asInstanceOf[ReferenceValue].section shouldEqual("_context")
+    o.columns(0).sources(0).whens(0).left.asInstanceOf[ReferenceValue].key shouldEqual("a")
     o.columns(0).sources(0).whens(0).right should not be null
     o.columns(0).sources(0).whens(0).right shouldBe a [StringValue]
     o.columns(0).sources(0).whens(0).right.asInstanceOf[StringValue].value shouldEqual("a distant ship")
@@ -47,7 +47,7 @@ class SyntaxSpec extends FlatSpec with Matchers {
 
     o.columns(1).table should not be null
     o.columns(1).table.section shouldEqual("tables")
-    o.columns(1).table.key shouldEqual("table1")
+    o.columns(1).table.name shouldEqual("table1")
     o.columns(1).sources.length shouldBe 1
     o.columns(1).sources(0) should not be null
     o.columns(1).sources(0) shouldBe a [ColumnTableSource]
@@ -56,9 +56,9 @@ class SyntaxSpec extends FlatSpec with Matchers {
     o.columns(1).sources(0).whens.length shouldBe 1
     o.columns(1).sources(0).whens(0) should not be null
     o.columns(1).sources(0).whens(0).left should not be null
-    o.columns(1).sources(0).whens(0).left shouldBe a [Reference]
-    o.columns(1).sources(0).whens(0).left.asInstanceOf[Reference].section shouldEqual("_local")
-    o.columns(1).sources(0).whens(0).left.asInstanceOf[Reference].key shouldEqual("x")
+    o.columns(1).sources(0).whens(0).left shouldBe a [ReferenceValue]
+    o.columns(1).sources(0).whens(0).left.asInstanceOf[ReferenceValue].section shouldEqual("_local")
+    o.columns(1).sources(0).whens(0).left.asInstanceOf[ReferenceValue].key shouldEqual("x")
     o.columns(1).sources(0).whens(0).right should not be null
     o.columns(1).sources(0).whens(0).right shouldBe a [NumberValue]
     o.columns(1).sources(0).whens(0).right.asInstanceOf[NumberValue].value shouldEqual(1.0)
@@ -74,14 +74,14 @@ class SyntaxSpec extends FlatSpec with Matchers {
 
     o.table should not be null
     o.table.section shouldEqual("tables")
-    o.table.key shouldEqual("table0")
+    o.table.name shouldEqual("table0")
 
     o.filters.length shouldBe 1
     o.filters(0) should not be null
     o.filters(0).left should not be null
-    o.filters(0).left shouldBe a [Reference]
-    o.filters(0).left.asInstanceOf[Reference].section shouldEqual("_context")
-    o.filters(0).left.asInstanceOf[Reference].key shouldEqual("a")
+    o.filters(0).left shouldBe a [ReferenceValue]
+    o.filters(0).left.asInstanceOf[ReferenceValue].section shouldEqual("_context")
+    o.filters(0).left.asInstanceOf[ReferenceValue].key shouldEqual("a")
     o.filters(0).right should not be null
     o.filters(0).right shouldBe a [NumberValue]
     o.filters(0).right.asInstanceOf[NumberValue].value shouldEqual(3.0)
@@ -107,16 +107,16 @@ class SyntaxSpec extends FlatSpec with Matchers {
 
     o.table should not be null
     o.table.section shouldEqual("tables")
-    o.table.key shouldEqual("items")
+    o.table.name shouldEqual("items")
 
     o.assignments.length shouldBe 3
 
     o.assignments(0) should not be null
     o.assignments(0).target shouldEqual("a.b.c")
     o.assignments(0).source should not be null
-    o.assignments(0).source shouldBe a [Reference]
-    o.assignments(0).source.asInstanceOf[Reference].section shouldEqual("_context")
-    o.assignments(0).source.asInstanceOf[Reference].key shouldEqual("x.y.z")
+    o.assignments(0).source shouldBe a [ReferenceValue]
+    o.assignments(0).source.asInstanceOf[ReferenceValue].section shouldEqual("_context")
+    o.assignments(0).source.asInstanceOf[ReferenceValue].key shouldEqual("x.y.z")
 
     o.assignments(1) should not be null
     o.assignments(1).target shouldEqual("c")
@@ -149,9 +149,9 @@ class SyntaxSpec extends FlatSpec with Matchers {
     val arg0 = o.assignments(0).source.asInstanceOf[FunctionValue].args(0).asInstanceOf[FunctionValue]
     arg0.name shouldEqual("add")
     arg0.args.length shouldEqual(2)
-    arg0.args(0) shouldBe a [Reference]
-    arg0.args(0).asInstanceOf[Reference].section shouldEqual("_context")
-    arg0.args(0).asInstanceOf[Reference].key shouldEqual("b")
+    arg0.args(0) shouldBe a [ReferenceValue]
+    arg0.args(0).asInstanceOf[ReferenceValue].section shouldEqual("_context")
+    arg0.args(0).asInstanceOf[ReferenceValue].key shouldEqual("b")
     arg0.args(1) shouldBe a [NumberValue]
     arg0.args(1).asInstanceOf[NumberValue].value shouldEqual(2.0)
 
@@ -168,26 +168,26 @@ class SyntaxSpec extends FlatSpec with Matchers {
 
     o.table should not be null
     o.table.section shouldEqual("tables")
-    o.table.key shouldEqual("foo")
+    o.table.name shouldEqual("foo")
 
     o.assignments.length shouldBe 1
     o.assignments(0) should not be null
     o.assignments(0).target shouldEqual("a")
     o.assignments(0).source should not be null
-    o.assignments(0).source shouldBe a [Reference]
-    o.assignments(0).source.asInstanceOf[Reference].section shouldEqual("_context")
-    o.assignments(0).source.asInstanceOf[Reference].key shouldEqual("b")
+    o.assignments(0).source shouldBe a [ReferenceValue]
+    o.assignments(0).source.asInstanceOf[ReferenceValue].section shouldEqual("_context")
+    o.assignments(0).source.asInstanceOf[ReferenceValue].key shouldEqual("b")
 
     o.filters.length shouldBe 1
     o.filters(0) should not be null
     o.filters(0).left should not be null
-    o.filters(0).left shouldBe a [Reference]
-    o.filters(0).left.asInstanceOf[Reference].section shouldEqual("_context")
-    o.filters(0).left.asInstanceOf[Reference].key shouldEqual("c")
+    o.filters(0).left shouldBe a [ReferenceValue]
+    o.filters(0).left.asInstanceOf[ReferenceValue].section shouldEqual("_context")
+    o.filters(0).left.asInstanceOf[ReferenceValue].key shouldEqual("c")
     o.filters(0).right should not be null
-    o.filters(0).right shouldBe a [Reference]
-    o.filters(0).right.asInstanceOf[Reference].section shouldEqual("_context")
-    o.filters(0).right.asInstanceOf[Reference].key shouldEqual("a")
+    o.filters(0).right shouldBe a [ReferenceValue]
+    o.filters(0).right.asInstanceOf[ReferenceValue].section shouldEqual("_context")
+    o.filters(0).right.asInstanceOf[ReferenceValue].key shouldEqual("a")
     o.filters(0).op shouldEqual("eq")
   }
 
@@ -208,16 +208,16 @@ class SyntaxSpec extends FlatSpec with Matchers {
     val arg0 = o.assignments(0).source.asInstanceOf[FunctionValue].args(0).asInstanceOf[FunctionValue]
     arg0.name shouldEqual("multiply")
     arg0.args.length shouldEqual(2)
-    arg0.args(0) shouldBe a [Reference]
-    arg0.args(0).asInstanceOf[Reference].section shouldEqual("_context")
-    arg0.args(0).asInstanceOf[Reference].key shouldEqual("b")
-    arg0.args(1) shouldBe a [Reference]
-    arg0.args(1).asInstanceOf[Reference].section shouldEqual("_context")
-    arg0.args(1).asInstanceOf[Reference].key shouldEqual("c")
+    arg0.args(0) shouldBe a [ReferenceValue]
+    arg0.args(0).asInstanceOf[ReferenceValue].section shouldEqual("_context")
+    arg0.args(0).asInstanceOf[ReferenceValue].key shouldEqual("b")
+    arg0.args(1) shouldBe a [ReferenceValue]
+    arg0.args(1).asInstanceOf[ReferenceValue].section shouldEqual("_context")
+    arg0.args(1).asInstanceOf[ReferenceValue].key shouldEqual("c")
 
-    o.assignments(0).source.asInstanceOf[FunctionValue].args(1) shouldBe a [Reference]
-    o.assignments(0).source.asInstanceOf[FunctionValue].args(1).asInstanceOf[Reference].section shouldEqual("_context")
-    o.assignments(0).source.asInstanceOf[FunctionValue].args(1).asInstanceOf[Reference].key shouldEqual("d")
+    o.assignments(0).source.asInstanceOf[FunctionValue].args(1) shouldBe a [ReferenceValue]
+    o.assignments(0).source.asInstanceOf[FunctionValue].args(1).asInstanceOf[ReferenceValue].section shouldEqual("_context")
+    o.assignments(0).source.asInstanceOf[FunctionValue].args(1).asInstanceOf[ReferenceValue].key shouldEqual("d")
   }
 
   def validate_require(steps: Seq[Step]) {
@@ -243,34 +243,34 @@ class SyntaxSpec extends FlatSpec with Matchers {
 
     o.table should not be null
     o.table.section shouldEqual("tables")
-    o.table.key shouldEqual("items")
+    o.table.name shouldEqual("items")
 
     o.revisions.length shouldEqual(3)
     o.revisions(0) should not be null
     o.revisions(0) shouldBe a [AddRevisionSource]
     o.revisions(0).column shouldEqual("a.b")
     o.revisions(0).asInstanceOf[TableRevisionSource].table.section shouldEqual("table")
-    o.revisions(0).asInstanceOf[TableRevisionSource].table.key shouldEqual("foo")
+    o.revisions(0).asInstanceOf[TableRevisionSource].table.name shouldEqual("foo")
     o.revisions(0).whens.length shouldEqual(1)
     o.revisions(0).whens(0) should not be null
-    o.revisions(0).whens(0).left shouldBe a [Reference]
-    o.revisions(0).whens(0).left.asInstanceOf[Reference].section shouldEqual("_local")
-    o.revisions(0).whens(0).left.asInstanceOf[Reference].key shouldEqual("x")
-    o.revisions(0).whens(0).right shouldBe a [Reference]
-    o.revisions(0).whens(0).right.asInstanceOf[Reference].section shouldEqual("_context")
-    o.revisions(0).whens(0).right.asInstanceOf[Reference].key shouldEqual("y")
+    o.revisions(0).whens(0).left shouldBe a [ReferenceValue]
+    o.revisions(0).whens(0).left.asInstanceOf[ReferenceValue].section shouldEqual("_local")
+    o.revisions(0).whens(0).left.asInstanceOf[ReferenceValue].key shouldEqual("x")
+    o.revisions(0).whens(0).right shouldBe a [ReferenceValue]
+    o.revisions(0).whens(0).right.asInstanceOf[ReferenceValue].section shouldEqual("_context")
+    o.revisions(0).whens(0).right.asInstanceOf[ReferenceValue].key shouldEqual("y")
     o.revisions(0).whens(0).op shouldEqual("eq")
 
     o.revisions(1) should not be null
     o.revisions(1) shouldBe a [UpdateRevisionSource]
     o.revisions(1).column shouldEqual("c")
     o.revisions(1).asInstanceOf[TableRevisionSource].table.section shouldEqual("table")
-    o.revisions(1).asInstanceOf[TableRevisionSource].table.key shouldEqual("bar")
+    o.revisions(1).asInstanceOf[TableRevisionSource].table.name shouldEqual("bar")
     o.revisions(1).whens.length shouldEqual(1)
     o.revisions(1).whens(0) should not be null
-    o.revisions(1).whens(0).left shouldBe a [Reference]
-    o.revisions(1).whens(0).left.asInstanceOf[Reference].section shouldEqual("_context")
-    o.revisions(1).whens(0).left.asInstanceOf[Reference].key shouldEqual("q")
+    o.revisions(1).whens(0).left shouldBe a [ReferenceValue]
+    o.revisions(1).whens(0).left.asInstanceOf[ReferenceValue].section shouldEqual("_context")
+    o.revisions(1).whens(0).left.asInstanceOf[ReferenceValue].key shouldEqual("q")
     o.revisions(1).whens(0).right shouldBe a [NumberValue]
     o.revisions(1).whens(0).right.asInstanceOf[NumberValue].value shouldEqual(3.0)
     o.revisions(1).whens(0).op shouldEqual("lt")
@@ -280,9 +280,9 @@ class SyntaxSpec extends FlatSpec with Matchers {
     o.revisions(2).column shouldEqual("d")
     o.revisions(2).whens.length shouldEqual(1)
     o.revisions(2).whens(0) should not be null
-    o.revisions(2).whens(0).left shouldBe a [Reference]
-    o.revisions(2).whens(0).left.asInstanceOf[Reference].section shouldEqual("_context")
-    o.revisions(2).whens(0).left.asInstanceOf[Reference].key shouldEqual("r")
+    o.revisions(2).whens(0).left shouldBe a [ReferenceValue]
+    o.revisions(2).whens(0).left.asInstanceOf[ReferenceValue].section shouldEqual("_context")
+    o.revisions(2).whens(0).left.asInstanceOf[ReferenceValue].key shouldEqual("r")
     o.revisions(2).whens(0).right shouldBe a [NumberValue]
     o.revisions(2).whens(0).right.asInstanceOf[NumberValue].value shouldEqual(1.0)
     o.revisions(2).whens(0).op shouldEqual("eq")

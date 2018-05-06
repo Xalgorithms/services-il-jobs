@@ -121,7 +121,7 @@ object StepProduce {
     } else if ("number" == vt) {
       return new NumberValue(doubleOrNull(content, "value"))
     } else if ("reference" == vt) {
-      return MakeReference(stringOrNull(content, "section"), stringOrNull(content, "key"))
+      return new DocumentReferenceValue(stringOrNull(content, "section"), stringOrNull(content, "key"))
     } else if ("function" == vt) {
       return new FunctionValue(
         stringOrNull(content, "name"),

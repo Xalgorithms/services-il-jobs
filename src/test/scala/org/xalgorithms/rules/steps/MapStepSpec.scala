@@ -13,8 +13,8 @@ class MapStepSpec extends FlatSpec with Matchers {
     val step = new MapStep(
       new TableReference("table", "table2"),
       Seq(
-        new Assignment("e", new Reference("_context", "a")),
-        new Assignment("f", new Reference("_context", "b"))))
+        new Assignment("e", new DocumentReferenceValue("_context", "a")),
+        new Assignment("f", new DocumentReferenceValue("_context", "b"))))
 
     step.execute(ctx)
 
@@ -76,7 +76,9 @@ class MapStepSpec extends FlatSpec with Matchers {
       new TableReference("table", "table2"),
       Seq(
         new Assignment("e", new FunctionValue(
-          "add", Seq(new Reference("_context", "a"), new Reference("_context", "d"))))
+          "add", Seq(
+            new DocumentReferenceValue("_context", "a"),
+            new DocumentReferenceValue("_context", "d"))))
       )
     )
 

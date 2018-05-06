@@ -5,8 +5,8 @@ import org.xalgorithms.rules.elements._
 
 class MapStep(table: TableReference, assignments: Seq[Assignment]) extends AssignmentStep(table, assignments) {
   def execute(ctx: Context) {
-    val tbl = ctx.lookup_table(table.section, table.key)
-    ctx.retain_table(table.section, table.key, tbl.map { row =>
+    val tbl = ctx.lookup_table(table.section, table.name)
+    ctx.retain_table(table.section, table.name, tbl.map { row =>
       row ++ assignments.foldLeft(Map[String, Value]()) { (o, ass) =>
         val av = resolve_to_atomic_value(row, ass.source)
 
@@ -21,7 +21,7 @@ class MapStep(table: TableReference, assignments: Seq[Assignment]) extends Assig
   }
 
   def resolve_to_atomic_value(row: Map[String, Value], v: Value): Value = v match {
-    case (rv: Reference) => if (rv.section == "_context") row.getOrElse(rv.key, null) else null
+    case (rv: ReferenceValue) => if (rv.section == "_context") row.getOrElse(rv.key, null) else null
     case (fv: FunctionValue) => apply(fv.name, fv.args.map(arg => resolve_to_atomic_value(row, arg)))
     case _ => v
   }

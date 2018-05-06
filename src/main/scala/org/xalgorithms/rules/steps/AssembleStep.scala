@@ -15,7 +15,7 @@ class AssembleStep(val name: String, val columns: Seq[Column]) extends Step {
 
       val cols_source = src.asInstanceOf[ColumnsTableSource]
       if (null != cols_source) {
-        stbl = ctx.lookup_table(col.table.section, col.table.key).map { o =>
+        stbl = ctx.lookup_table(col.table.section, col.table.name).map { o =>
           o.filterKeys { k =>
             cols_source.columns.length == 0 || cols_source.columns.contains(k)
           }

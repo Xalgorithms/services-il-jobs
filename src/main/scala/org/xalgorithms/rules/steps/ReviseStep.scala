@@ -10,7 +10,7 @@ class ReviseStep(val table: TableReference, val revisions: Seq[RevisionSource]) 
       seq.zipAll(changes, Map(), Map()).map { tup => tup._1 ++ tup._2 }
     }
 
-    ctx.add_revision(table.key, new Revision(all_changes))
+    ctx.add_revision(table.name, new Revision(all_changes))
   }
 
   def changes_from_source(ctx: Context, src: RevisionSource): Seq[Map[String, Change]] = src match {
@@ -19,7 +19,7 @@ class ReviseStep(val table: TableReference, val revisions: Seq[RevisionSource]) 
   }
 
   def changes_from_update(ctx: Context, src: UpdateRevisionSource): Seq[Map[String, Change]] = {
-    val tbl = ctx.lookup_table(src.table.section, src.table.key)
+    val tbl = ctx.lookup_table(src.table.section, src.table.name)
     tbl.map { r => Map(src.column -> new Change(ChangeOps.Update, r(src.column))) }
   }
 }
