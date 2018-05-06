@@ -6,8 +6,8 @@ import org.xalgorithms.rules.elements._
 import org.xalgorithms.rules.steps._
 
 class AssembleStepSpec extends FlatSpec with Matchers {
-  "AssembleStep" should "load tables into the Context" in {
-    val ctx = new Context(new ResourceLoadTableSource())
+  "AssembleStep" should "load tables into the GlobalContext" in {
+    val ctx = new GlobalContext(new ResourceLoadTableSource())
 
     // two simple COLUMNS
     // ALL columns, no conditions

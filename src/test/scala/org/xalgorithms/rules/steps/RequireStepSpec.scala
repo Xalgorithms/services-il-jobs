@@ -6,8 +6,8 @@ import org.xalgorithms.rules.elements._
 import org.xalgorithms.rules.steps._
 
 class RequireSpec extends FlatSpec with Matchers {
-  "RequireStep" should "load tables into the Context" in {
-    val ctx = new Context(new ResourceLoadTableSource())
+  "RequireStep" should "load tables into the GlobalContext" in {
+    val ctx = new GlobalContext(new ResourceLoadTableSource())
 
     val ref = new PackagedTableReference("package", "table0", "0.0.1", "table0")
     val step = new RequireStep(ref, Seq())
@@ -33,7 +33,7 @@ class RequireSpec extends FlatSpec with Matchers {
   }
 
   it should "flatten JSON hierarchies when loading" in {
-    val ctx = new Context(new ResourceLoadTableSource())
+    val ctx = new GlobalContext(new ResourceLoadTableSource())
 
     val ref = new PackagedTableReference("package", "table0", "0.0.1", "table_hier")
     val step = new RequireStep(ref, Seq())

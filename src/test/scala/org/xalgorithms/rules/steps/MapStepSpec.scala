@@ -7,7 +7,7 @@ import org.xalgorithms.rules.steps._
 
 class MapStepSpec extends FlatSpec with Matchers {
   "MapStep" should "transform tables in place" in {
-    val ctx = new Context(new ResourceLoadTableSource())
+    val ctx = new GlobalContext(new ResourceLoadTableSource())
     ctx.load(new PackagedTableReference("package", "table2", "0.0.1", "table2"))
 
     val step = new MapStep(
@@ -69,7 +69,7 @@ class MapStepSpec extends FlatSpec with Matchers {
   }
 
   it should "transform tables in place with functions" in {
-    val ctx = new Context(new ResourceLoadTableSource())
+    val ctx = new GlobalContext(new ResourceLoadTableSource())
     ctx.load(new PackagedTableReference("package", "table2", "0.0.1", "table2"))
 
     val step = new MapStep(

@@ -7,7 +7,7 @@ import org.xalgorithms.rules.steps._
 
 class FilterStepSpec extends FlatSpec with Matchers {
   "FilterStep" should "transform tables in place (number/eq)" in {
-    val ctx = new Context(new ResourceLoadTableSource())
+    val ctx = new GlobalContext(new ResourceLoadTableSource())
     ctx.load(new PackagedTableReference("package", "table2", "0.0.1", "table2"))
 
     val step = new FilterStep(
@@ -43,7 +43,7 @@ class FilterStepSpec extends FlatSpec with Matchers {
   }
 
   it should "transform tables in place (string/eq)" in {
-    val ctx = new Context(new ResourceLoadTableSource())
+    val ctx = new GlobalContext(new ResourceLoadTableSource())
     ctx.load(new PackagedTableReference("package", "table2", "0.0.1", "table2"))
 
     val step = new FilterStep(

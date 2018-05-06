@@ -7,7 +7,7 @@ import org.xalgorithms.rules.steps._
 
 class ReviseStepSpec extends FlatSpec with Matchers {
   "ReviseStep" should "produce updates for existing tables" in {
-    val ctx = new Context(new ResourceLoadTableSource())
+    val ctx = new GlobalContext(new ResourceLoadTableSource())
     ctx.load(new PackagedTableReference("package", "table2", "0.0.1", "table2"))
     ctx.load(new PackagedTableReference("package", "table2_updates", "0.0.1", "table2_updates"))
 
