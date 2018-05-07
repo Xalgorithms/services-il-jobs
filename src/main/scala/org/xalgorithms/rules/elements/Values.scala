@@ -6,24 +6,40 @@ abstract class Value {
 
 class NumberValue(val value: BigDecimal) extends Value {
   def matches(v: Value, op: String): Boolean = v match {
-    case (sv: StringValue) => value == BigDecimal(sv.value)
-    case (nv: NumberValue) => value == nv.value
+    case (sv: StringValue) => matches_value(BigDecimal(sv.value), op)
+    case (nv: NumberValue) => matches_value(nv.value, op)
+    case _ => false
+  }
+
+  def matches_value(v: BigDecimal, op: String): Boolean = op match {
+    case "eq" => value == v
+    case "lt" => value < v
+    case "lte" => value <= v
+    case "gt" => value > v
+    case "gte" => value >= v
     case _ => false
   }
 }
 
 class StringValue(val value: String) extends Value {
   def matches(v: Value, op: String): Boolean = v match {
-    case (sv: StringValue) => value == sv.value
-    case (nv: NumberValue) => value == nv.toString
+    case (sv: StringValue) => matches_value(sv.value, op)
+    case (nv: NumberValue) => matches_value(nv.value.toString, op)
+    case _ => false
+  }
+
+  def matches_value(v: String, op: String): Boolean = op match {
+    case "eq" => value == v
+    case "lt" => value < v
+    case "lte" => value <= v
+    case "gt" => value > v
+    case "gte" => value >= v
     case _ => false
   }
 }
 
 class FunctionValue(val name: String, val args: Seq[Value]) extends Value {
-  def matches(v: Value, op: String): Boolean = {
-    return false
-  }
+  def matches(v: Value, op: String): Boolean = false
 }
 
 class EmptyValue extends Value {
