@@ -22,9 +22,16 @@ class ReferencesSpec extends FlatSpec with Matchers with MockFactory {
       ex.keySet.foreach { k =>
         val ref = new DocumentReferenceValue(name, k)
 
-        (ctx.lookup_in_map _).expects(name, k).returning(new StringValue(ex(k)))
+        (ctx.lookup_in_map _).expects(name, k).returning(new StringValue(ex(k))).twice
 
-        val v = ref.get(ctx)
+        var v = ref.resolve(ctx)
+        v should not be null
+        v shouldBe a [StringValue]
+        v.asInstanceOf[StringValue].value shouldEqual(ex(k))
+
+        // try again using ResolveValue
+        v = ResolveValue(ref, ctx)
+        v should not be null
         v shouldBe a [StringValue]
         v.asInstanceOf[StringValue].value shouldEqual(ex(k))
       }
