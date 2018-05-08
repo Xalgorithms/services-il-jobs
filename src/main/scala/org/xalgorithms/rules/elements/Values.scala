@@ -80,16 +80,30 @@ class StringValue(val value: String) extends IntrinsicValue {
   }
 }
 
-class FunctionValue(val name: String, val args: Seq[Value]) extends Value {
+abstract class ComputedValue extends Value {
+  def resolve(ctx: Context): Option[IntrinsicValue]
+}
+
+class FunctionValue(val name: String, val args: Seq[Value]) extends ComputedValue {
   def matches(v: Value, op: String): Boolean = false
-  def resolve(args: Seq[IntrinsicValue]): Option[IntrinsicValue] = args.length match {
-    case 0 => None
-    case 1 => Some(args.head)
-    case _ => args.head.apply_func(args.tail, name)
+
+  def resolve(ctx: Context): Option[IntrinsicValue] = {
+    val largs = args.foldLeft(Seq[IntrinsicValue]()) { (a, v) =>
+      ResolveValue(v, ctx) match {
+        case Some(iv) => a :+ iv
+        case None => a
+      }
+    }
+
+    largs.length match {
+      case 0 => None
+      case 1 => Some(largs.head)
+      case _ => largs.head.apply_func(largs.tail, name)
+    }
   }
 }
 
-abstract class ReferenceValue(val section: String, val key: String) extends Value {
+abstract class ReferenceValue(val section: String, val key: String) extends ComputedValue {
   def resolve(ctx: Context): Option[IntrinsicValue]
 
   def matches(v: Value, op: String): Boolean = v match {
@@ -106,17 +120,8 @@ class DocumentReferenceValue(section: String, key: String) extends ReferenceValu
 
 object ResolveValue {
   def apply(v: Value, ctx: Context): Option[IntrinsicValue] = v match {
-    case (rv: ReferenceValue) => rv.resolve(ctx)
+    case (cv: ComputedValue) => cv.resolve(ctx)
     case (iv: IntrinsicValue) => Some(iv)
     case _ => None
-  }
-
-  def apply(fv: FunctionValue, args: Seq[Value], ctx: Context): Option[IntrinsicValue] = {
-    fv.resolve(args.foldLeft(Seq[IntrinsicValue]()) { (a, v) =>
-      ResolveValue(v, ctx) match {
-        case Some(iv) => a :+ iv
-        case None => a
-      }
-    })
   }
 }

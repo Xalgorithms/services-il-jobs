@@ -127,18 +127,19 @@ class ValuesSpec extends FlatSpec with Matchers with MockFactory {
   }
 
   it should "resolve and evaluate the function against intrinsics" in {
-    var r = new scala.util.Random()
+    val r = new scala.util.Random()
     Seq("func0", "func1", "func2").foreach { name =>
-      var arg0 = mock[IntrinsicValue]
-      var argsN = (0 to r.nextInt(10)).map { _ => mock[IntrinsicValue] }
-      var args = Seq(arg0) ++ argsN
-      var rv = new NumberValue(1.0)
+      val arg0 = mock[IntrinsicValue]
+      val argsN = (0 to r.nextInt(10)).map { _ => mock[IntrinsicValue] }
+      val args = Seq(arg0) ++ argsN
+      val rv = new NumberValue(1.0)
+      val ctx = mock[Context]
 
-      var fv = new FunctionValue(name, args)
+      val fv = new FunctionValue(name, args)
 
       (arg0.apply_func _).expects(argsN, name).returning(Some(rv))
 
-      var frv = fv.resolve(args)
+      val frv = fv.resolve(ctx)
       frv match {
         case Some(v) =>
           v shouldBe a [NumberValue]
@@ -164,7 +165,7 @@ class ValuesSpec extends FlatSpec with Matchers with MockFactory {
     (arg0.apply_func _).expects(Seq(arg1, arg2), name).returning(Some(rv))
     (ref1.resolve _).expects(ctx).returning(Some(arg1))
 
-    val forv = ResolveValue(fv, args, ctx)
+    val forv = ResolveValue(fv, ctx)
     forv match {
       case Some(frv) => {
         frv shouldBe a [StringValue]
