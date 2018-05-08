@@ -7,7 +7,7 @@ abstract class Context {
   def load(ptref: PackagedTableReference)
   def retain_map(section: String, m: Map[String, IntrinsicValue])
   def retain_table(section: String, key: String, t: Seq[Map[String, IntrinsicValue]])
-  def lookup_in_map(section: String, key: String): IntrinsicValue
+  def lookup_in_map(section: String, key: String): Option[IntrinsicValue]
   def lookup_table(section: String, table_name: String): Seq[Map[String, IntrinsicValue]]
   def revisions(): Map[String, Seq[Revision]]
   def add_revision(key: String, rev: Revision)
@@ -32,8 +32,8 @@ class GlobalContext(load: LoadTableSource) extends Context {
     _tables(section) = sm
   }
 
-  def lookup_in_map(section: String, key: String): IntrinsicValue = {
-    _maps.getOrElse(section, Map[String, IntrinsicValue]()).getOrElse(key, null)
+  def lookup_in_map(section: String, key: String): Option[IntrinsicValue] = {
+    _maps.getOrElse(section, Map[String, IntrinsicValue]()).get(key)
   }
 
   def lookup_table(section: String, table_name: String): Seq[Map[String, IntrinsicValue]] = {
@@ -55,14 +55,10 @@ class RowContext(ctx: Context, local_row: Map[String, IntrinsicValue], context_r
   def retain_map(section: String, m: Map[String, IntrinsicValue]) = ctx.retain_map(section, m)
   def retain_table(section: String, key: String, t: Seq[Map[String, IntrinsicValue]]) = ctx.retain_table(section, key, t)
 
-  def lookup_in_map(section: String, key: String): IntrinsicValue = {
-    if ("_local" == section) {
-      return local_row.getOrElse(key, null)
-    } else if ("_context" == section) {
-      return context_row.getOrElse(key, null)
-    }
-
-    return ctx.lookup_in_map(section, key)
+  def lookup_in_map(section: String, key: String): Option[IntrinsicValue] = section match {
+    case "_local" => local_row.get(key)
+    case "_context" => context_row.get(key)
+    case _ => ctx.lookup_in_map(section, key)
   }
 
   def lookup_table(section: String, table_name: String): Seq[Map[String, IntrinsicValue]] = ctx.lookup_table(section, table_name)

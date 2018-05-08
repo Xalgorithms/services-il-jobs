@@ -8,32 +8,35 @@ class MapStep(table: TableReference, assignments: Seq[Assignment]) extends Assig
     val tbl = ctx.lookup_table(table.section, table.name)
     ctx.retain_table(table.section, table.name, tbl.map { row =>
       row ++ assignments.foldLeft(Map[String, IntrinsicValue]()) { (o, ass) =>
-        val av = resolve_to_atomic_value(row, ass.source)
+        val aov = resolve_to_atomic_value(row, ass.source)
 
-        if (null != av) {
-          o ++ Map(ass.target -> av)
-        } else {
-          println("DEBT: unsupported or unknown source")
-          o
+        aov match {
+          case Some(av) => o ++ Map(ass.target -> av)
+          case None => o
         }
       }
     })
   }
 
-  def resolve_to_atomic_value(row: Map[String, IntrinsicValue], v: Value): IntrinsicValue = v match {
-    case (rv: ReferenceValue) => if (rv.section == "_context") row.getOrElse(rv.key, null) else null
+  def resolve_to_atomic_value(row: Map[String, IntrinsicValue], v: Value): Option[IntrinsicValue] = v match {
+    case (rv: ReferenceValue) => if (rv.section == "_context") Some(row.getOrElse(rv.key, null)) else None
     case (fv: FunctionValue) => apply(fv.name, fv.args.map(arg => resolve_to_atomic_value(row, arg)))
-    case (iv: IntrinsicValue) => iv
-    case _ => new EmptyValue()
+    case (iv: IntrinsicValue) => Some(iv)
+    case _ => None
   }
 
-  def apply(fn: String, args: Seq[Value]): IntrinsicValue = fn match {
-    case "add" => apply_add(args)
-    case _ => new EmptyValue
+  def apply(fn: String, args: Seq[Option[IntrinsicValue]]): Option[IntrinsicValue] = fn match {
+    case "add" => Some(apply_add(args))
+    case _ => None
   }
 
-  def apply_add(args: Seq[Value]): IntrinsicValue = {
-    new NumberValue(args.map(make_number).foldLeft(BigDecimal(0.0)) { (sum, n) => sum + n })
+  def apply_add(args: Seq[Option[IntrinsicValue]]): IntrinsicValue = {
+    new NumberValue(args.foldLeft(BigDecimal(0.0)) { (sum, n) =>
+      n match {
+        case Some(v) => sum + make_number(v)
+        case None => sum
+      }
+    })
   }
 
   def make_number(v: Value): BigDecimal = v match {

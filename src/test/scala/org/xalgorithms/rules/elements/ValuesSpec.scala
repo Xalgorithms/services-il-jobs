@@ -126,8 +126,31 @@ class ValuesSpec extends FlatSpec with Matchers with MockFactory {
     match_nothing(new FunctionValue("foo", Seq()))
   }
 
-  "EmptyValue" should "match nothing" in {
-    match_nothing(new EmptyValue())
+  it should "resolve and evaluate the function against intrinsics" in {
+    var r = new scala.util.Random()
+    Seq("func0", "func1", "func2").foreach { name =>
+      var arg0 = mock[IntrinsicValue]
+      var argsN = (0 to r.nextInt(10)).map { _ => mock[IntrinsicValue] }
+      var args = Seq(arg0) ++ argsN
+      var rv = new NumberValue(1.0)
+
+      var fv = new FunctionValue(name, args)
+
+      (arg0.apply_func _).expects(argsN, name).returning(Some(rv))
+
+      var frv = fv.resolve(args)
+      frv match {
+        case Some(v) =>
+          v shouldBe a [NumberValue]
+          v.asInstanceOf[NumberValue].value shouldEqual(1.0)
+        case None =>
+          true shouldEqual(false)
+      }
+    }
+  }
+
+  it should "resolve to intrinsics via ResolveValue" in {
+//    true shouldEqual false
   }
 
   def map_to_expected(m: Map[String, String]): Map[String, Value] = {
@@ -144,19 +167,20 @@ class ValuesSpec extends FlatSpec with Matchers with MockFactory {
       val expected = map_to_expected(ex)
       ex.keySet.foreach { k =>
         val ref = new DocumentReferenceValue(name, k)
+        val check_fn = { ov: Option[IntrinsicValue] =>
+          ov match {
+            case Some(v) => {
+              v shouldBe a [StringValue]
+              v.asInstanceOf[StringValue].value shouldEqual(ex(k))
+            }
+            case None => true shouldEqual false
+          }
+        }
 
-        (ctx.lookup_in_map _).expects(name, k).returning(new StringValue(ex(k))).twice
+        (ctx.lookup_in_map _).expects(name, k).returning(Some(new StringValue(ex(k)))).twice
 
-        var v = ref.resolve(ctx)
-        v should not be null
-        v shouldBe a [StringValue]
-        v.asInstanceOf[StringValue].value shouldEqual(ex(k))
-
-        // try again using ResolveValue
-        v = ResolveValue(ref, ctx)
-        v should not be null
-        v shouldBe a [StringValue]
-        v.asInstanceOf[StringValue].value shouldEqual(ex(k))
+        check_fn(ref.resolve(ctx))
+        check_fn(ResolveValue(ref, ctx))
       }
     }
   }

@@ -5,6 +5,14 @@ import org.xalgorithms.rules.elements._
 
 class When(val left: Value, val right: Value, val op: String) {
   def evaluate(ctx: Context): Boolean = {
-    ResolveValue(left, ctx).matches(ResolveValue(right, ctx), op)
+    ResolveValue(left, ctx) match {
+      case Some(lv) => {
+        ResolveValue(right, ctx) match {
+          case Some(rv) => lv.matches(rv, op)
+          case None => false
+        }
+      }
+      case None => false
+    }
   }
 }

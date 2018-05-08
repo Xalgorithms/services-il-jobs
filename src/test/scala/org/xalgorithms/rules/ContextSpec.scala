@@ -16,15 +16,20 @@ class ContextSpec extends FlatSpec with Matchers with MockFactory {
 
     maps.foreach { case (name, m) =>
       m.keySet.foreach { k =>
-        ctx.lookup_in_map(name, k) shouldEqual(null)
+        ctx.lookup_in_map(name, k) shouldEqual(None)
       }
 
       ctx.retain_map(name, m)
       m.keySet.foreach { k =>
-        val v = ctx.lookup_in_map(name, k)
-        v should not be null
-        v shouldBe a [StringValue]
-        v.asInstanceOf[StringValue].value shouldEqual(m(k).value)
+        val ov = ctx.lookup_in_map(name, k)
+
+        ov match {
+          case Some(v) => {
+            v shouldBe a [StringValue]
+            v.asInstanceOf[StringValue].value shouldEqual(m(k).value)
+          }
+          case None => true shouldEqual(false)
+        }
       }
     }
   }
@@ -63,11 +68,15 @@ class ContextSpec extends FlatSpec with Matchers with MockFactory {
 
     rows.foreach { case (section, row) =>
       row.foreach { case (key, v) =>
-        val cv = ctx.lookup_in_map(section, key)
+        val cov = ctx.lookup_in_map(section, key)
 
-        cv should not be null
-        cv shouldBe a [StringValue]
-        cv.asInstanceOf[StringValue].value shouldEqual(row(key).value)
+        cov match {
+          case Some(cv) => {
+            cv shouldBe a [StringValue]
+            cv.asInstanceOf[StringValue].value shouldEqual(row(key).value)
+          }
+          case None => true shouldEqual(false)
+        }
       }
     }
   }
@@ -93,11 +102,15 @@ class ContextSpec extends FlatSpec with Matchers with MockFactory {
     (ctx.retain_table _).expects(section, tbl_key, tbl)
     rctx.retain_table(section, tbl_key, tbl)
 
-    (ctx.lookup_in_map _).expects(section, map_key).returning(map_val)
-    val mv = rctx.lookup_in_map(section, map_key)
-    mv should not be null
-    mv shouldBe a [StringValue]
-    mv.asInstanceOf[StringValue].value shouldEqual(map_val.value)
+    (ctx.lookup_in_map _).expects(section, map_key).returning(Some(map_val))
+    val mov = rctx.lookup_in_map(section, map_key)
+    mov match {
+      case Some(mv) => {
+        mv shouldBe a [StringValue]
+        mv.asInstanceOf[StringValue].value shouldEqual(map_val.value)
+      }
+      case None => true shouldEqual(false)
+    }
 
     (ctx.lookup_table _).expects(section, tbl_key).returning(tbl)
     val t = rctx.lookup_table(section, tbl_key)

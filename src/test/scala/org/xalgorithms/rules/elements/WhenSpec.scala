@@ -31,8 +31,8 @@ class WhenSpec extends FlatSpec with Matchers with MockFactory {
       val rv0 = mock[ReferenceValue]
       val rv1 = mock[ReferenceValue]
 
-      (rv0.resolve _).expects(ctx).returning(v0).twice
-      (rv1.resolve _).expects(ctx).returning(v1).twice
+      (rv0.resolve _).expects(ctx).returning(Some(v0)).twice
+      (rv1.resolve _).expects(ctx).returning(Some(v1)).twice
 
       (v0.matches _).expects(v1, op).returning(false)
       (v1.matches _).expects(v0, op).returning(true)
