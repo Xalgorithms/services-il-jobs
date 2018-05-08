@@ -110,4 +110,13 @@ object ResolveValue {
     case (iv: IntrinsicValue) => Some(iv)
     case _ => None
   }
+
+  def apply(fv: FunctionValue, args: Seq[Value], ctx: Context): Option[IntrinsicValue] = {
+    fv.resolve(args.foldLeft(Seq[IntrinsicValue]()) { (a, v) =>
+      ResolveValue(v, ctx) match {
+        case Some(iv) => a :+ iv
+        case None => a
+      }
+    })
+  }
 }

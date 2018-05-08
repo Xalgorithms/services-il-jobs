@@ -150,7 +150,28 @@ class ValuesSpec extends FlatSpec with Matchers with MockFactory {
   }
 
   it should "resolve to intrinsics via ResolveValue" in {
-//    true shouldEqual false
+    val arg0 = mock[IntrinsicValue]
+    val ref1 = mock[ReferenceValue]
+    val arg1 = mock[IntrinsicValue]
+    val arg2 = mock[IntrinsicValue]
+    val rv = new StringValue("answer")
+    val args = Seq(arg0, ref1, arg2)
+    val name = "func0"
+    val ctx = mock[Context]
+
+    val fv = new FunctionValue(name, args)
+
+    (arg0.apply_func _).expects(Seq(arg1, arg2), name).returning(Some(rv))
+    (ref1.resolve _).expects(ctx).returning(Some(arg1))
+
+    val forv = ResolveValue(fv, args, ctx)
+    forv match {
+      case Some(frv) => {
+        frv shouldBe a [StringValue]
+        frv.asInstanceOf[StringValue].value shouldEqual("answer")
+      }
+      case None => true shouldEqual(false)
+    }
   }
 
   def map_to_expected(m: Map[String, String]): Map[String, Value] = {
