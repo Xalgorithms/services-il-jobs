@@ -84,12 +84,14 @@ class FunctionValue(val name: String, val args: Seq[Value]) extends Value {
   def matches(v: Value, op: String): Boolean = false
 }
 
-class EmptyValue extends Value {
+class EmptyValue extends IntrinsicValue {
   def matches(v: Value, op: String): Boolean = false
+
+  def apply_func(args: Seq[Value], func: String): Option[Value] = None
 }
 
 abstract class ReferenceValue(val section: String, val key: String) extends Value {
-  def resolve(ctx: Context): Value
+  def resolve(ctx: Context): IntrinsicValue
 
   def matches(v: Value, op: String): Boolean = v match {
     case (vr: ReferenceValue) => if ("eq" == op) section == vr.section && key == vr.key else false
@@ -98,14 +100,15 @@ abstract class ReferenceValue(val section: String, val key: String) extends Valu
 }
 
 class DocumentReferenceValue(section: String, key: String) extends ReferenceValue(section, key) {
-  def resolve(ctx: Context): Value = {
+  def resolve(ctx: Context): IntrinsicValue = {
     ctx.lookup_in_map(section, key)
   }
 }
 
 object ResolveValue {
-  def apply(v: Value, ctx: Context): Value = v match {
+  def apply(v: Value, ctx: Context): IntrinsicValue = v match {
     case (rv: ReferenceValue) => rv.resolve(ctx)
-    case _ => v
+    case (iv: IntrinsicValue) => iv
+    case _ => new EmptyValue()
   }
 }

@@ -161,7 +161,7 @@ class ValuesSpec extends FlatSpec with Matchers with MockFactory {
     }
   }
 
-  "DocumentReferenceValue" should "match equivalent references" in {
+  it should "match equivalent references" in {
     val ref0 = new DocumentReferenceValue("a", "x")
 
     ref0.matches(new DocumentReferenceValue("a", "x"), "eq") shouldEqual(true)

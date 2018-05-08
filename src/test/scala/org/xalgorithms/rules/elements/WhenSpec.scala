@@ -11,8 +11,8 @@ class WhenSpec extends FlatSpec with Matchers with MockFactory {
     val ctx = mock[Context]
 
     Seq("eq", "gt", "gte", "lt", "lte").foreach { op =>
-      val v0 = mock[Value]
-      val v1 = mock[Value]
+      val v0 = mock[IntrinsicValue]
+      val v1 = mock[IntrinsicValue]
 
       (v0.matches _).expects(v1, op).returning(false)
       (v1.matches _).expects(v0, op).returning(true)
@@ -26,8 +26,8 @@ class WhenSpec extends FlatSpec with Matchers with MockFactory {
     val ctx = mock[Context]
 
     Seq("eq", "gt", "gte", "lt", "lte").foreach { op =>
-      val v0 = mock[Value]
-      val v1 = mock[Value]
+      val v0 = mock[IntrinsicValue]
+      val v1 = mock[IntrinsicValue]
       val rv0 = mock[ReferenceValue]
       val rv1 = mock[ReferenceValue]
 

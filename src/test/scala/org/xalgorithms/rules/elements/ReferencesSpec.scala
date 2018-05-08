@@ -7,7 +7,7 @@ import org.xalgorithms.rules._
 import org.xalgorithms.rules.elements._
 
 class ReferencesSpec extends FlatSpec with Matchers with MockFactory {
-  def map_to_expected(m: Map[String, String]): Map[String, Value] = {
+  def map_to_expected(m: Map[String, String]): Map[String, IntrinsicValue] = {
     m.map { case (k, v) => (k, new StringValue(v)) }
   }
 

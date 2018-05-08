@@ -1,13 +1,13 @@
 package org.xalgorithms.rules.steps
 
 import org.xalgorithms.rules.{ Context }
-import org.xalgorithms.rules.elements.{ Column, ColumnsTableSource, Value }
+import org.xalgorithms.rules.elements.{ Column, ColumnsTableSource, IntrinsicValue }
 
 class AssembleStep(val name: String, val columns: Seq[Column]) extends Step {
   def execute(ctx: Context) {
-    val combined_tbl = columns.foldLeft(Seq[Map[String, Value]]()) { (tbl, col) =>
+    val combined_tbl = columns.foldLeft(Seq[Map[String, IntrinsicValue]]()) { (tbl, col) =>
       val src = col.sources.head
-      var stbl = Seq[Map[String, Value]]()
+      var stbl = Seq[Map[String, IntrinsicValue]]()
 
       if (col.sources.length > 1) {
         println("DEBT: only single column sources are supported")
