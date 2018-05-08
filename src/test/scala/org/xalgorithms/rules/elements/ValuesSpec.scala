@@ -32,6 +32,27 @@ class ValuesSpec extends FlatSpec with Matchers with MockFactory {
     }
   }
 
+  it should "perform addition of basic Values as SUM" in {
+    Seq(
+      Tuple3(1.0, Seq(new NumberValue(2.2), new NumberValue(3.3), new NumberValue(4.4)), 10.9),
+      Tuple3(1.0, Seq(new NumberValue(-2.0), new NumberValue(3.0)), 2.0),
+      Tuple3(11.0, Seq(new NumberValue(1.0), new NumberValue(2.0)), 14.0),
+      Tuple3(11.0, Seq(new StringValue("1.0"), new NumberValue(2.0)), 14.0),
+      Tuple3(11.0, Seq(new StringValue("1.0"), new StringValue("abc"), new StringValue("2.0")), 14.0)
+    ).foreach { case (bv, args, ex) =>
+        val v = new NumberValue(bv)
+        val sum = v.apply_func(args, "add")
+
+        sum match {
+          case Some(v) =>
+            v shouldBe a [NumberValue]
+            v.asInstanceOf[NumberValue].value shouldEqual(ex)
+          case None =>
+            true shouldEqual(false)
+        }
+    }
+  }
+
   "StringValue" should "match or convert" in {
     Seq(
       Tuple4("bb", new StringValue("bb"), "eq", true),
@@ -54,6 +75,26 @@ class ValuesSpec extends FlatSpec with Matchers with MockFactory {
       Tuple4("2.0", new NumberValue(2.0), "gt", false)
     ).foreach { case (n, rhs, op, ex) =>
         new StringValue(n).matches(rhs, op) shouldEqual(ex)
+    }
+  }
+
+
+  it should "perform addition of basic Values as CONCAT" in {
+    Seq(
+      Tuple3("a", Seq(new StringValue("b"), new StringValue("c")), "abc"),
+      Tuple3("a", Seq(new StringValue("1.0"), new NumberValue(2.0)), "a1.02.0"),
+      Tuple3("a", Seq(new StringValue("1.0"), new StringValue("abc"), new NumberValue(2.0)), "a1.0abc2.0")
+    ).foreach { case (bv, args, ex) =>
+        val v = new StringValue(bv)
+        val sum = v.apply_func(args, "add")
+
+        sum match {
+          case Some(v) =>
+            v shouldBe a [StringValue]
+            v.asInstanceOf[StringValue].value shouldEqual(ex)
+          case None =>
+            true shouldEqual(false)
+        }
     }
   }
 
