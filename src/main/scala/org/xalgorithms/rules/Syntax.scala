@@ -21,13 +21,13 @@ object StepProduce {
 
   implicit val colsSourceReads: Reads[ColumnsTableSource] = (
     (JsPath \ "columns").read[JsArray] and
-    (JsPath \ "whens").read[JsArray]
+    (JsPath \ "whens").readNullable[JsArray]
   )(produce_columns_table_source _)
 
   implicit val colSourceReads: Reads[ColumnTableSource] = (
     (JsPath \ "name").read[String] and
     (JsPath \ "source").read[String] and
-    (JsPath \ "whens").read[JsArray]
+    (JsPath \ "whens").readNullable[JsArray]
   )(produce_column_table_source _)
 
   implicit val whenReads: Reads[When] = (
@@ -92,20 +92,21 @@ object StepProduce {
     )
   }
 
+  def produce_optional_whens(whens_opt: Option[JsArray]): Seq[When] = whens_opt match {
+    case Some(whens) => whens.validate[Seq[When]].getOrElse(Seq())
+    case None => Seq()
+  }
+
   def produce_columns_table_source(
-    columns: JsArray, whens: JsArray): ColumnsTableSource = {
+    columns: JsArray, whens_opt: Option[JsArray]): ColumnsTableSource = {
     return new ColumnsTableSource(
       columns.validate[Seq[String]].getOrElse(Seq()),
-      whens.validate[Seq[When]].getOrElse(Seq())
-    )
+      produce_optional_whens(whens_opt))
   }
 
   def produce_column_table_source(
-    name: String, source: String, whens: JsArray): ColumnTableSource = {
-    return new ColumnTableSource(
-      name, source,
-      whens.validate[Seq[When]].getOrElse(Seq())
-    )
+    name: String, source: String, whens_opt: Option[JsArray]): ColumnTableSource = {
+    new ColumnTableSource(name, source, produce_optional_whens(whens_opt))
   }
 
   def produce_when(left: JsObject, right: JsObject, op: String): When = {

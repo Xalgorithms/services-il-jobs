@@ -296,6 +296,60 @@ class SyntaxSpec extends FlatSpec with Matchers {
     validate_assemble(syntax_from_bson("assemble"))
   }
 
+  it should "optionally load whens" in {
+    val steps = syntax_from_source("assemble_no_whens")
+
+    steps.length shouldBe 1
+    steps.head should not be null
+    steps.head shouldBe a [AssembleStep]
+
+    val o = steps.head.asInstanceOf[AssembleStep]
+    o.name shouldEqual("table_final")
+
+    o.columns.length shouldBe 2
+
+    o.columns(0).table should not be null
+    o.columns(0).table.section shouldEqual("tables")
+    o.columns(0).table.name shouldEqual("table0")
+    o.columns(0).sources.length shouldBe 1
+    o.columns(0).sources(0) should not be null
+    o.columns(0).sources(0) shouldBe a [ColumnsTableSource]
+    o.columns(0).sources(0).asInstanceOf[ColumnsTableSource].columns shouldEqual(Seq("c0", "c1", "c2"))
+    o.columns(0).sources(0).whens.length shouldBe 0
+
+    o.columns(1).table should not be null
+    o.columns(1).table.section shouldEqual("tables")
+    o.columns(1).table.name shouldEqual("table1")
+    o.columns(1).sources.length shouldBe 1
+    o.columns(1).sources(0) should not be null
+    o.columns(1).sources(0) shouldBe a [ColumnTableSource]
+    o.columns(1).sources(0).asInstanceOf[ColumnTableSource].name shouldEqual("y")
+    o.columns(1).sources(0).asInstanceOf[ColumnTableSource].source shouldEqual("x")
+    o.columns(1).sources(0).whens.length shouldBe 0
+  }
+
+  it should "load sources with empty columns" in {
+    val steps = syntax_from_source("assemble_empty_columns")
+
+    steps.length shouldBe 1
+    steps.head should not be null
+    steps.head shouldBe a [AssembleStep]
+
+    val o = steps.head.asInstanceOf[AssembleStep]
+    o.name shouldEqual("table_final")
+
+    o.columns.length shouldBe 1
+
+    o.columns(0).table should not be null
+    o.columns(0).table.section shouldEqual("table")
+    o.columns(0).table.name shouldEqual("table0")
+    o.columns(0).sources.length shouldBe 1
+    o.columns(0).sources(0) should not be null
+    o.columns(0).sources(0) shouldBe a [ColumnsTableSource]
+    o.columns(0).sources(0).asInstanceOf[ColumnsTableSource].columns shouldEqual(Seq())
+    o.columns(0).sources(0).whens.length shouldBe 0
+  }
+
   "FilterStep" should "load from JSON" in {
     validate_filter(syntax_from_source("filter"))
   }
