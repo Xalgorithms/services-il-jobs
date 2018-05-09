@@ -18,6 +18,14 @@ class GlobalContext(load: LoadTableSource) extends Context {
   var _revisions = mutable.Map[String, mutable.Seq[Revision]]()
   var _maps = mutable.Map[String, Map[String, IntrinsicValue]]()
 
+  def enumerate_tables(fn: (String, String, Seq[Map[String, IntrinsicValue]]) => Unit): Unit = {
+    _tables.foreach { case (section, tables) =>
+      tables.foreach { case (name, table) =>
+        fn(section, name, table)
+      }
+    }
+  }
+
   def load(ptref: PackagedTableReference) {
     retain_table("table", ptref.name, load.load(ptref))
   }
