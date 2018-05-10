@@ -69,6 +69,42 @@ class AssembleStepSpec extends FlatSpec with Matchers with MockFactory {
     step.execute(ctx)
   }
 
+  it should "be filtered by WHEN using COLUMNS" in {
+    val ctx = mock[Context]
+    val section = "table"
+    val table_name = "table0"
+    val final_table_name = "table_final"
+    val table = Seq(
+      Map("a" -> new StringValue("00"), "b" -> new StringValue("01")),
+      Map("a" -> new StringValue("00"), "b" -> new StringValue("11")),
+      Map("a" -> new StringValue("10"), "b" -> new StringValue("11")))
+    val table_expected = Seq(
+      Map("a" -> new StringValue("00"), "b" -> new StringValue("11"))
+    )
+
+    val whens = Seq(
+      new When(new StringValue("11"), new DocumentReferenceValue("_context", "b"), "eq"),
+      new When(new StringValue("00"), new DocumentReferenceValue("_context", "a"), "eq"))
+    val cols = new Column(
+      new TableReference(section, table_name),
+      Seq(new ColumnsTableSource(Seq(), whens)))
+
+    val step = new AssembleStep(final_table_name, Seq(cols))
+
+    (ctx.lookup_table _).expects(section, table_name).returning(table)
+    (ctx.retain_table _) expects(section, final_table_name, *) onCall { (section, name, tbl) =>
+      tbl.size shouldEqual(table_expected.size)
+      (tbl, table_expected).zipped.foreach { case (rac, rex) =>
+        Seq("a", "b").foreach { k =>
+          rac(k) shouldBe a [StringValue]
+          rac(k).asInstanceOf[StringValue].value shouldEqual(rex(k).asInstanceOf[StringValue].value)
+        }
+      }
+    }
+
+    step.execute(ctx)
+  }
+
   it should "perform a cross-product of multiple COLUMNS from different tables" in {
     val ctx = mock[Context]
     val section = "table"
@@ -284,6 +320,42 @@ class AssembleStepSpec extends FlatSpec with Matchers with MockFactory {
     (ctx.retain_table _) expects(section, final_table_name, *) onCall { (section, name, tbl) =>
       tbl.size shouldEqual(table.size)
       (tbl, table).zipped.foreach { case (rac, rex) =>
+        rac(tk) shouldBe a [StringValue]
+        rac(tk).asInstanceOf[StringValue].value shouldEqual(rex(sk).asInstanceOf[StringValue].value)
+      }
+    }
+
+    step.execute(ctx)
+  }
+
+  it should "be filtered by WHEN using COLUMN" in {
+    val ctx = mock[Context]
+    val section = "table"
+    val table_name = "table0"
+    val final_table_name = "table_final"
+    val table = Seq(
+      Map("a" -> new StringValue("00"), "b" -> new StringValue("01")),
+      Map("a" -> new StringValue("00"), "b" -> new StringValue("11")),
+      Map("a" -> new StringValue("10"), "b" -> new StringValue("11")))
+    val table_expected = Seq(
+      Map("a" -> new StringValue("00"), "b" -> new StringValue("11"))
+    )
+    val sk = "b"
+    val tk = "bbb"
+
+    val whens = Seq(
+      new When(new StringValue("11"), new DocumentReferenceValue("_context", "b"), "eq"),
+      new When(new StringValue("00"), new DocumentReferenceValue("_context", "a"), "eq"))
+    val cols = new Column(
+      new TableReference(section, table_name),
+      Seq(new ColumnTableSource(tk, sk, whens)))
+
+    val step = new AssembleStep(final_table_name, Seq(cols))
+
+    (ctx.lookup_table _).expects(section, table_name).returning(table)
+    (ctx.retain_table _) expects(section, final_table_name, *) onCall { (section, name, tbl) =>
+      tbl.size shouldEqual(table_expected.size)
+      (tbl, table_expected).zipped.foreach { case (rac, rex) =>
         rac(tk) shouldBe a [StringValue]
         rac(tk).asInstanceOf[StringValue].value shouldEqual(rex(sk).asInstanceOf[StringValue].value)
       }

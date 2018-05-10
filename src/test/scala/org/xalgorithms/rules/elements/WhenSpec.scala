@@ -41,4 +41,20 @@ class WhenSpec extends FlatSpec with Matchers with MockFactory {
       new When(rv1, rv0, op).evaluate(ctx) shouldEqual(true)
     }
   }
+
+  def validate_whens(vals: Seq[Boolean], expected: Boolean): Unit = {
+    val ctx = mock[Context]
+
+    EvaluateMany(ctx, vals.map { v =>
+      val wh = mock[When]
+      (wh.evaluate _).expects(ctx).returning(v)
+      wh
+    }) shouldEqual(expected)
+  }
+
+  it should "apply many whens" in {
+    validate_whens(Seq(), true)
+    validate_whens(Seq(true, true), true)
+    validate_whens(Seq(true, false), false)
+  }
 }

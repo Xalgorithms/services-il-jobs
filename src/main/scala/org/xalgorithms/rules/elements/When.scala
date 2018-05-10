@@ -16,3 +16,9 @@ class When(val left: Value, val right: Value, val op: String) {
     }
   }
 }
+
+object EvaluateMany {
+  def apply(ctx: Context, whens: Seq[When]): Boolean = {
+    whens.foldLeft(true) { (v, wh) => v && wh.evaluate(ctx) }
+  }
+}
