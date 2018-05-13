@@ -58,13 +58,24 @@ class GlobalContext(load: LoadTableSource) extends Context {
   }
 }
 
-class RowContext(ctx: Context, local_row: Map[String, IntrinsicValue], context_row: Map[String, IntrinsicValue]) extends Context {
+class RowContext(
+  ctx: Context,
+  local_row: Map[String, IntrinsicValue],
+  context_row: Map[String, IntrinsicValue]
+) extends Context {
+  val _local = mutable.Map[String, IntrinsicValue]() ++ local_row
+
+
   def load(ptref: PackagedTableReference) = ctx.load(ptref)
   def retain_map(section: String, m: Map[String, IntrinsicValue]) = ctx.retain_map(section, m)
   def retain_table(section: String, key: String, t: Seq[Map[String, IntrinsicValue]]) = ctx.retain_table(section, key, t)
 
+  def update_local(ch: Map[String, IntrinsicValue]): Unit = {
+    _local ++= ch
+  }
+
   def lookup_in_map(section: String, key: String): Option[IntrinsicValue] = section match {
-    case "_local" => local_row.get(key)
+    case "_local" => _local.get(key)
     case "_context" => context_row.get(key)
     case _ => ctx.lookup_in_map(section, key)
   }

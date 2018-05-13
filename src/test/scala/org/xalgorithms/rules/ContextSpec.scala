@@ -129,4 +129,29 @@ class ContextSpec extends FlatSpec with Matchers with MockFactory {
 
     rctx.add_revision(rev_key, rev)
   }
+
+  it should "allow local modification without affecting the original source" in {
+    val ctx = mock[Context]
+    val keys = Seq("a", "b", "c")
+    val new_keys = Seq("d", "e")
+    val original = keys.map { k => (k, new StringValue(k)) }.toMap
+    val original_size = original.size
+    val rctx = new RowContext(ctx, original, Map())
+
+    new_keys.foreach { k =>
+      rctx.update_local(Map(k -> new StringValue(k)))
+
+      original.size shouldEqual(original_size)
+      original.contains(k) shouldEqual(false)
+
+      val vo = rctx.lookup_in_map("_local", k)
+      vo match {
+        case Some(v) => {
+          v shouldBe a [StringValue]
+          v.asInstanceOf[StringValue].value shouldEqual(k)
+        }
+        case None => true shouldBe false
+      }
+    }
+  }
 }

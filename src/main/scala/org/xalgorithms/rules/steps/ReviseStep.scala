@@ -14,6 +14,7 @@ class ReviseStep(val table: TableReference, val revisions: Seq[RevisionSource]) 
   }
 
   def changes_from_source(ctx: Context, src: RevisionSource): Seq[Map[String, Change]] = src match {
+    // DEBT: Missing Add/Remove
     case (urs: UpdateRevisionSource) => changes_from_update(ctx, urs)
     case _ => Seq[Map[String, Change]]()
   }
