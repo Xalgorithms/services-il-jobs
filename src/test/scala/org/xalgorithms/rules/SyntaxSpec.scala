@@ -5,12 +5,19 @@ import org.xalgorithms.rules.steps._
 import org.xalgorithms.rules.elements._
 
 import scala.io.Source
+import org.bson.BsonDocument
 import org.scalatest._
 
 class SyntaxSpec extends FlatSpec with Matchers {
-  "AssembleStep" should "load from JSON" in {
-    val source = Source.fromURL(getClass.getResource("/assemble.json"))
-    val steps = SyntaxFromSource(source)
+  def syntax_from_source(step_name: String): Seq[Step] = {
+    SyntaxFromSource(Source.fromURL(getClass.getResource(s"/${step_name}.json")))
+  }
+
+  def syntax_from_bson(step_name: String): Seq[Step] = {
+    SyntaxFromBson(BsonDocument.parse(Source.fromURL(getClass.getResource(s"/${step_name}.json")).mkString))
+  }
+
+  def validate_assemble(steps: Seq[Step]) {
     steps.length shouldBe 1
     steps.head should not be null
     steps.head shouldBe a [AssembleStep]
@@ -22,7 +29,7 @@ class SyntaxSpec extends FlatSpec with Matchers {
 
     o.columns(0).table should not be null
     o.columns(0).table.section shouldEqual("tables")
-    o.columns(0).table.key shouldEqual("table0")
+    o.columns(0).table.name shouldEqual("table0")
     o.columns(0).sources.length shouldBe 1
     o.columns(0).sources(0) should not be null
     o.columns(0).sources(0) shouldBe a [ColumnsTableSource]
@@ -30,9 +37,9 @@ class SyntaxSpec extends FlatSpec with Matchers {
     o.columns(0).sources(0).whens.length shouldBe 1
     o.columns(0).sources(0).whens(0) should not be null
     o.columns(0).sources(0).whens(0).left should not be null
-    o.columns(0).sources(0).whens(0).left shouldBe a [Reference]
-    o.columns(0).sources(0).whens(0).left.asInstanceOf[Reference].section shouldEqual("_context")
-    o.columns(0).sources(0).whens(0).left.asInstanceOf[Reference].key shouldEqual("a")
+    o.columns(0).sources(0).whens(0).left shouldBe a [ReferenceValue]
+    o.columns(0).sources(0).whens(0).left.asInstanceOf[ReferenceValue].section shouldEqual("_context")
+    o.columns(0).sources(0).whens(0).left.asInstanceOf[ReferenceValue].key shouldEqual("a")
     o.columns(0).sources(0).whens(0).right should not be null
     o.columns(0).sources(0).whens(0).right shouldBe a [StringValue]
     o.columns(0).sources(0).whens(0).right.asInstanceOf[StringValue].value shouldEqual("a distant ship")
@@ -40,7 +47,7 @@ class SyntaxSpec extends FlatSpec with Matchers {
 
     o.columns(1).table should not be null
     o.columns(1).table.section shouldEqual("tables")
-    o.columns(1).table.key shouldEqual("table1")
+    o.columns(1).table.name shouldEqual("table1")
     o.columns(1).sources.length shouldBe 1
     o.columns(1).sources(0) should not be null
     o.columns(1).sources(0) shouldBe a [ColumnTableSource]
@@ -49,18 +56,16 @@ class SyntaxSpec extends FlatSpec with Matchers {
     o.columns(1).sources(0).whens.length shouldBe 1
     o.columns(1).sources(0).whens(0) should not be null
     o.columns(1).sources(0).whens(0).left should not be null
-    o.columns(1).sources(0).whens(0).left shouldBe a [Reference]
-    o.columns(1).sources(0).whens(0).left.asInstanceOf[Reference].section shouldEqual("_local")
-    o.columns(1).sources(0).whens(0).left.asInstanceOf[Reference].key shouldEqual("x")
+    o.columns(1).sources(0).whens(0).left shouldBe a [ReferenceValue]
+    o.columns(1).sources(0).whens(0).left.asInstanceOf[ReferenceValue].section shouldEqual("_local")
+    o.columns(1).sources(0).whens(0).left.asInstanceOf[ReferenceValue].key shouldEqual("x")
     o.columns(1).sources(0).whens(0).right should not be null
-    o.columns(1).sources(0).whens(0).right shouldBe a [Number]
-    o.columns(1).sources(0).whens(0).right.asInstanceOf[Number].value shouldEqual(1.0)
+    o.columns(1).sources(0).whens(0).right shouldBe a [NumberValue]
+    o.columns(1).sources(0).whens(0).right.asInstanceOf[NumberValue].value shouldEqual(1.0)
     o.columns(1).sources(0).whens(0).op shouldEqual("eq")
   }
 
-  "FilterStep" should "load from JSON" in {
-    val source = Source.fromURL(getClass.getResource("/filter.json"))
-    val steps = SyntaxFromSource(source)
+  def validate_filter(steps: Seq[Step]) {
     steps.length shouldBe 1
     steps.head should not be null
     steps.head shouldBe a [FilterStep]
@@ -69,23 +74,21 @@ class SyntaxSpec extends FlatSpec with Matchers {
 
     o.table should not be null
     o.table.section shouldEqual("tables")
-    o.table.key shouldEqual("table0")
+    o.table.name shouldEqual("table0")
 
     o.filters.length shouldBe 1
     o.filters(0) should not be null
     o.filters(0).left should not be null
-    o.filters(0).left shouldBe a [Reference]
-    o.filters(0).left.asInstanceOf[Reference].section shouldEqual("_context")
-    o.filters(0).left.asInstanceOf[Reference].key shouldEqual("a")
+    o.filters(0).left shouldBe a [ReferenceValue]
+    o.filters(0).left.asInstanceOf[ReferenceValue].section shouldEqual("_context")
+    o.filters(0).left.asInstanceOf[ReferenceValue].key shouldEqual("a")
     o.filters(0).right should not be null
-    o.filters(0).right shouldBe a [Number]
-    o.filters(0).right.asInstanceOf[Number].value shouldEqual(3.0)
+    o.filters(0).right shouldBe a [NumberValue]
+    o.filters(0).right.asInstanceOf[NumberValue].value shouldEqual(3.0)
     o.filters(0).op shouldEqual("lt")
   }
 
-  "KeepStep" should "load from JSON" in {
-    val source = Source.fromURL(getClass.getResource("/keep.json"))
-    val steps = SyntaxFromSource(source)
+  def validate_keep(steps: Seq[Step]) {
     steps.length shouldBe 1
     steps.head should not be null
     steps.head shouldBe a [KeepStep]
@@ -95,9 +98,7 @@ class SyntaxSpec extends FlatSpec with Matchers {
     o.table shouldEqual("table0")
   }
 
-  "MapStep" should "load from JSON" in {
-    val source = Source.fromURL(getClass.getResource("/map.json"))
-    val steps = SyntaxFromSource(source)
+  def validate_map(steps: Seq[Step]) {
     steps.length shouldBe 1
     steps.head should not be null
     steps.head shouldBe a [MapStep]
@@ -106,22 +107,22 @@ class SyntaxSpec extends FlatSpec with Matchers {
 
     o.table should not be null
     o.table.section shouldEqual("tables")
-    o.table.key shouldEqual("items")
+    o.table.name shouldEqual("items")
 
     o.assignments.length shouldBe 3
 
     o.assignments(0) should not be null
     o.assignments(0).target shouldEqual("a.b.c")
     o.assignments(0).source should not be null
-    o.assignments(0).source shouldBe a [Reference]
-    o.assignments(0).source.asInstanceOf[Reference].section shouldEqual("_context")
-    o.assignments(0).source.asInstanceOf[Reference].key shouldEqual("x.y.z")
+    o.assignments(0).source shouldBe a [ReferenceValue]
+    o.assignments(0).source.asInstanceOf[ReferenceValue].section shouldEqual("_context")
+    o.assignments(0).source.asInstanceOf[ReferenceValue].key shouldEqual("x.y.z")
 
     o.assignments(1) should not be null
     o.assignments(1).target shouldEqual("c")
     o.assignments(1).source should not be null
-    o.assignments(1).source shouldBe a [Number]
-    o.assignments(1).source.asInstanceOf[Number].value shouldEqual(2.0)
+    o.assignments(1).source shouldBe a [NumberValue]
+    o.assignments(1).source.asInstanceOf[NumberValue].value shouldEqual(2.0)
 
     o.assignments(2) should not be null
     o.assignments(2).target shouldEqual("d")
@@ -130,9 +131,7 @@ class SyntaxSpec extends FlatSpec with Matchers {
     o.assignments(2).source.asInstanceOf[StringValue].value shouldEqual("s")
   }
 
-  it should "read function usings from JSON" in {
-    val source = Source.fromURL(getClass.getResource("/map_functions.json"))
-    val steps = SyntaxFromSource(source)
+  def validate_map_functions(steps: Seq[Step]) {
     steps.length shouldBe 1
     steps.head should not be null
     steps.head shouldBe a [MapStep]
@@ -150,19 +149,17 @@ class SyntaxSpec extends FlatSpec with Matchers {
     val arg0 = o.assignments(0).source.asInstanceOf[FunctionValue].args(0).asInstanceOf[FunctionValue]
     arg0.name shouldEqual("add")
     arg0.args.length shouldEqual(2)
-    arg0.args(0) shouldBe a [Reference]
-    arg0.args(0).asInstanceOf[Reference].section shouldEqual("_context")
-    arg0.args(0).asInstanceOf[Reference].key shouldEqual("b")
-    arg0.args(1) shouldBe a [Number]
-    arg0.args(1).asInstanceOf[Number].value shouldEqual(2.0)
+    arg0.args(0) shouldBe a [ReferenceValue]
+    arg0.args(0).asInstanceOf[ReferenceValue].section shouldEqual("_context")
+    arg0.args(0).asInstanceOf[ReferenceValue].key shouldEqual("b")
+    arg0.args(1) shouldBe a [NumberValue]
+    arg0.args(1).asInstanceOf[NumberValue].value shouldEqual(2.0)
 
-    o.assignments(0).source.asInstanceOf[FunctionValue].args(1) shouldBe a [Number]
-    o.assignments(0).source.asInstanceOf[FunctionValue].args(1).asInstanceOf[Number].value shouldEqual(4.0)
+    o.assignments(0).source.asInstanceOf[FunctionValue].args(1) shouldBe a [NumberValue]
+    o.assignments(0).source.asInstanceOf[FunctionValue].args(1).asInstanceOf[NumberValue].value shouldEqual(4.0)
   }
 
-  "ReduceStep" should "load from JSON" in {
-    val source = Source.fromURL(getClass.getResource("/reduce.json"))
-    val steps = SyntaxFromSource(source)
+  def validate_reduce(steps: Seq[Step]) {
     steps.length shouldBe 1
     steps.head should not be null
     steps.head shouldBe a [ReduceStep]
@@ -171,32 +168,30 @@ class SyntaxSpec extends FlatSpec with Matchers {
 
     o.table should not be null
     o.table.section shouldEqual("tables")
-    o.table.key shouldEqual("foo")
+    o.table.name shouldEqual("foo")
 
     o.assignments.length shouldBe 1
     o.assignments(0) should not be null
     o.assignments(0).target shouldEqual("a")
     o.assignments(0).source should not be null
-    o.assignments(0).source shouldBe a [Reference]
-    o.assignments(0).source.asInstanceOf[Reference].section shouldEqual("_context")
-    o.assignments(0).source.asInstanceOf[Reference].key shouldEqual("b")
+    o.assignments(0).source shouldBe a [ReferenceValue]
+    o.assignments(0).source.asInstanceOf[ReferenceValue].section shouldEqual("_context")
+    o.assignments(0).source.asInstanceOf[ReferenceValue].key shouldEqual("b")
 
     o.filters.length shouldBe 1
     o.filters(0) should not be null
     o.filters(0).left should not be null
-    o.filters(0).left shouldBe a [Reference]
-    o.filters(0).left.asInstanceOf[Reference].section shouldEqual("_context")
-    o.filters(0).left.asInstanceOf[Reference].key shouldEqual("c")
+    o.filters(0).left shouldBe a [ReferenceValue]
+    o.filters(0).left.asInstanceOf[ReferenceValue].section shouldEqual("_context")
+    o.filters(0).left.asInstanceOf[ReferenceValue].key shouldEqual("c")
     o.filters(0).right should not be null
-    o.filters(0).right shouldBe a [Reference]
-    o.filters(0).right.asInstanceOf[Reference].section shouldEqual("_context")
-    o.filters(0).right.asInstanceOf[Reference].key shouldEqual("a")
+    o.filters(0).right shouldBe a [ReferenceValue]
+    o.filters(0).right.asInstanceOf[ReferenceValue].section shouldEqual("_context")
+    o.filters(0).right.asInstanceOf[ReferenceValue].key shouldEqual("a")
     o.filters(0).op shouldEqual("eq")
   }
 
-  it should "read function usings from JSON" in {
-    val source = Source.fromURL(getClass.getResource("/reduce_functions.json"))
-    val steps = SyntaxFromSource(source)
+  def validate_reduce_functions(steps: Seq[Step]) {
     steps.length shouldBe 1
     steps.head should not be null
     steps.head shouldBe a [ReduceStep]
@@ -213,21 +208,19 @@ class SyntaxSpec extends FlatSpec with Matchers {
     val arg0 = o.assignments(0).source.asInstanceOf[FunctionValue].args(0).asInstanceOf[FunctionValue]
     arg0.name shouldEqual("multiply")
     arg0.args.length shouldEqual(2)
-    arg0.args(0) shouldBe a [Reference]
-    arg0.args(0).asInstanceOf[Reference].section shouldEqual("_context")
-    arg0.args(0).asInstanceOf[Reference].key shouldEqual("b")
-    arg0.args(1) shouldBe a [Reference]
-    arg0.args(1).asInstanceOf[Reference].section shouldEqual("_context")
-    arg0.args(1).asInstanceOf[Reference].key shouldEqual("c")
+    arg0.args(0) shouldBe a [ReferenceValue]
+    arg0.args(0).asInstanceOf[ReferenceValue].section shouldEqual("_context")
+    arg0.args(0).asInstanceOf[ReferenceValue].key shouldEqual("b")
+    arg0.args(1) shouldBe a [ReferenceValue]
+    arg0.args(1).asInstanceOf[ReferenceValue].section shouldEqual("_context")
+    arg0.args(1).asInstanceOf[ReferenceValue].key shouldEqual("c")
 
-    o.assignments(0).source.asInstanceOf[FunctionValue].args(1) shouldBe a [Reference]
-    o.assignments(0).source.asInstanceOf[FunctionValue].args(1).asInstanceOf[Reference].section shouldEqual("_context")
-    o.assignments(0).source.asInstanceOf[FunctionValue].args(1).asInstanceOf[Reference].key shouldEqual("d")
+    o.assignments(0).source.asInstanceOf[FunctionValue].args(1) shouldBe a [ReferenceValue]
+    o.assignments(0).source.asInstanceOf[FunctionValue].args(1).asInstanceOf[ReferenceValue].section shouldEqual("_context")
+    o.assignments(0).source.asInstanceOf[FunctionValue].args(1).asInstanceOf[ReferenceValue].key shouldEqual("d")
   }
 
-  "RequireStep" should "load from JSON" in {
-    val source = Source.fromURL(getClass.getResource("/require.json"))
-    val steps = SyntaxFromSource(source)
+  def validate_require(steps: Seq[Step]) {
     steps.length shouldBe 1
     steps.head should not be null
     steps.head shouldBe a [RequireStep]
@@ -241,9 +234,7 @@ class SyntaxSpec extends FlatSpec with Matchers {
     o.indexes shouldEqual Seq("a", "b")
   }
 
-  "ReviseStep" should "load from JSON" in {
-    val source = Source.fromURL(getClass.getResource("/revise.json"))
-    val steps = SyntaxFromSource(source)
+  def validate_revise(steps: Seq[Step]) {
     steps.length shouldBe 1
     steps.head should not be null
     steps.head shouldBe a [ReviseStep]
@@ -252,51 +243,166 @@ class SyntaxSpec extends FlatSpec with Matchers {
 
     o.table should not be null
     o.table.section shouldEqual("tables")
-    o.table.key shouldEqual("items")
+    o.table.name shouldEqual("items")
 
     o.revisions.length shouldEqual(3)
     o.revisions(0) should not be null
-    o.revisions(0).source should not be null
-    o.revisions(0).source shouldBe a [AddRevisionSource]
-    o.revisions(0).source.column shouldEqual("a.b")
-    o.revisions(0).source.asInstanceOf[TableRevisionSource].table.section shouldEqual("table")
-    o.revisions(0).source.asInstanceOf[TableRevisionSource].table.key shouldEqual("foo")
-    o.revisions(0).source.whens.length shouldEqual(1)
-    o.revisions(0).source.whens(0) should not be null
-    o.revisions(0).source.whens(0).left shouldBe a [Reference]
-    o.revisions(0).source.whens(0).left.asInstanceOf[Reference].section shouldEqual("_local")
-    o.revisions(0).source.whens(0).left.asInstanceOf[Reference].key shouldEqual("x")
-    o.revisions(0).source.whens(0).right shouldBe a [Reference]
-    o.revisions(0).source.whens(0).right.asInstanceOf[Reference].section shouldEqual("_context")
-    o.revisions(0).source.whens(0).right.asInstanceOf[Reference].key shouldEqual("y")
-    o.revisions(0).source.whens(0).op shouldEqual("eq")
+    o.revisions(0) shouldBe a [AddRevisionSource]
+    o.revisions(0).column shouldEqual("a.b")
+    o.revisions(0).asInstanceOf[TableRevisionSource].table.section shouldEqual("table")
+    o.revisions(0).asInstanceOf[TableRevisionSource].table.name shouldEqual("foo")
+    o.revisions(0).whens.length shouldEqual(1)
+    o.revisions(0).whens(0) should not be null
+    o.revisions(0).whens(0).left shouldBe a [ReferenceValue]
+    o.revisions(0).whens(0).left.asInstanceOf[ReferenceValue].section shouldEqual("_local")
+    o.revisions(0).whens(0).left.asInstanceOf[ReferenceValue].key shouldEqual("x")
+    o.revisions(0).whens(0).right shouldBe a [ReferenceValue]
+    o.revisions(0).whens(0).right.asInstanceOf[ReferenceValue].section shouldEqual("_context")
+    o.revisions(0).whens(0).right.asInstanceOf[ReferenceValue].key shouldEqual("y")
+    o.revisions(0).whens(0).op shouldEqual("eq")
 
     o.revisions(1) should not be null
-    o.revisions(1).source should not be null
-    o.revisions(1).source shouldBe a [UpdateRevisionSource]
-    o.revisions(1).source.column shouldEqual("c")
-    o.revisions(1).source.asInstanceOf[TableRevisionSource].table.section shouldEqual("table")
-    o.revisions(1).source.asInstanceOf[TableRevisionSource].table.key shouldEqual("bar")
-    o.revisions(1).source.whens.length shouldEqual(1)
-    o.revisions(1).source.whens(0) should not be null
-    o.revisions(1).source.whens(0).left shouldBe a [Reference]
-    o.revisions(1).source.whens(0).left.asInstanceOf[Reference].section shouldEqual("_context")
-    o.revisions(1).source.whens(0).left.asInstanceOf[Reference].key shouldEqual("q")
-    o.revisions(1).source.whens(0).right shouldBe a [Number]
-    o.revisions(1).source.whens(0).right.asInstanceOf[Number].value shouldEqual(3.0)
-    o.revisions(1).source.whens(0).op shouldEqual("lt")
+    o.revisions(1) shouldBe a [UpdateRevisionSource]
+    o.revisions(1).column shouldEqual("c")
+    o.revisions(1).asInstanceOf[TableRevisionSource].table.section shouldEqual("table")
+    o.revisions(1).asInstanceOf[TableRevisionSource].table.name shouldEqual("bar")
+    o.revisions(1).whens.length shouldEqual(1)
+    o.revisions(1).whens(0) should not be null
+    o.revisions(1).whens(0).left shouldBe a [ReferenceValue]
+    o.revisions(1).whens(0).left.asInstanceOf[ReferenceValue].section shouldEqual("_context")
+    o.revisions(1).whens(0).left.asInstanceOf[ReferenceValue].key shouldEqual("q")
+    o.revisions(1).whens(0).right shouldBe a [NumberValue]
+    o.revisions(1).whens(0).right.asInstanceOf[NumberValue].value shouldEqual(3.0)
+    o.revisions(1).whens(0).op shouldEqual("lt")
 
     o.revisions(2) should not be null
-    o.revisions(2).source should not be null
-    o.revisions(2).source shouldBe a [DeleteRevisionSource]
-    o.revisions(2).source.column shouldEqual("d")
-    o.revisions(2).source.whens.length shouldEqual(1)
-    o.revisions(2).source.whens(0) should not be null
-    o.revisions(2).source.whens(0).left shouldBe a [Reference]
-    o.revisions(2).source.whens(0).left.asInstanceOf[Reference].section shouldEqual("_context")
-    o.revisions(2).source.whens(0).left.asInstanceOf[Reference].key shouldEqual("r")
-    o.revisions(2).source.whens(0).right shouldBe a [Number]
-    o.revisions(2).source.whens(0).right.asInstanceOf[Number].value shouldEqual(1.0)
-    o.revisions(2).source.whens(0).op shouldEqual("eq")
+    o.revisions(2) shouldBe a [DeleteRevisionSource]
+    o.revisions(2).column shouldEqual("d")
+    o.revisions(2).whens.length shouldEqual(1)
+    o.revisions(2).whens(0) should not be null
+    o.revisions(2).whens(0).left shouldBe a [ReferenceValue]
+    o.revisions(2).whens(0).left.asInstanceOf[ReferenceValue].section shouldEqual("_context")
+    o.revisions(2).whens(0).left.asInstanceOf[ReferenceValue].key shouldEqual("r")
+    o.revisions(2).whens(0).right shouldBe a [NumberValue]
+    o.revisions(2).whens(0).right.asInstanceOf[NumberValue].value shouldEqual(1.0)
+    o.revisions(2).whens(0).op shouldEqual("eq")
+  }
+
+  "AssembleStep" should "load from JSON" in {
+    validate_assemble(syntax_from_source("assemble"))
+  }
+
+  it should "load from BsonDocument" in {
+    validate_assemble(syntax_from_bson("assemble"))
+  }
+
+  it should "optionally load whens" in {
+    val steps = syntax_from_source("assemble_no_whens")
+
+    steps.length shouldBe 1
+    steps.head should not be null
+    steps.head shouldBe a [AssembleStep]
+
+    val o = steps.head.asInstanceOf[AssembleStep]
+    o.name shouldEqual("table_final")
+
+    o.columns.length shouldBe 2
+
+    o.columns(0).table should not be null
+    o.columns(0).table.section shouldEqual("tables")
+    o.columns(0).table.name shouldEqual("table0")
+    o.columns(0).sources.length shouldBe 1
+    o.columns(0).sources(0) should not be null
+    o.columns(0).sources(0) shouldBe a [ColumnsTableSource]
+    o.columns(0).sources(0).asInstanceOf[ColumnsTableSource].columns shouldEqual(Seq("c0", "c1", "c2"))
+    o.columns(0).sources(0).whens.length shouldBe 0
+
+    o.columns(1).table should not be null
+    o.columns(1).table.section shouldEqual("tables")
+    o.columns(1).table.name shouldEqual("table1")
+    o.columns(1).sources.length shouldBe 1
+    o.columns(1).sources(0) should not be null
+    o.columns(1).sources(0) shouldBe a [ColumnTableSource]
+    o.columns(1).sources(0).asInstanceOf[ColumnTableSource].name shouldEqual("y")
+    o.columns(1).sources(0).asInstanceOf[ColumnTableSource].source shouldEqual("x")
+    o.columns(1).sources(0).whens.length shouldBe 0
+  }
+
+  it should "load sources with empty columns" in {
+    val steps = syntax_from_source("assemble_empty_columns")
+
+    steps.length shouldBe 1
+    steps.head should not be null
+    steps.head shouldBe a [AssembleStep]
+
+    val o = steps.head.asInstanceOf[AssembleStep]
+    o.name shouldEqual("table_final")
+
+    o.columns.length shouldBe 1
+
+    o.columns(0).table should not be null
+    o.columns(0).table.section shouldEqual("table")
+    o.columns(0).table.name shouldEqual("table0")
+    o.columns(0).sources.length shouldBe 1
+    o.columns(0).sources(0) should not be null
+    o.columns(0).sources(0) shouldBe a [ColumnsTableSource]
+    o.columns(0).sources(0).asInstanceOf[ColumnsTableSource].columns shouldEqual(Seq())
+    o.columns(0).sources(0).whens.length shouldBe 0
+  }
+
+  "FilterStep" should "load from JSON" in {
+    validate_filter(syntax_from_source("filter"))
+  }
+
+  it should "load from BsonDocument" in {
+    validate_filter(syntax_from_bson("filter"))
+  }
+
+  "KeepStep" should "load from JSON" in {
+    validate_keep(syntax_from_source("keep"))
+  }
+
+  it should "load from BsonDocument" in {
+    validate_keep(syntax_from_bson("keep"))
+  }
+
+  "MapStep" should "load from JSON" in {
+    validate_map(syntax_from_source("map"))
+  }
+
+  it should "load from BsonDocument" in {
+    validate_map(syntax_from_bson("map"))
+  }
+
+  it should "read function usings from JSON" in {
+    validate_map_functions(syntax_from_source("map_functions"))
+  }
+
+  "ReduceStep" should "load from JSON" in {
+    validate_reduce(syntax_from_source("reduce"))
+  }
+
+  it should "load from BsonDocument" in {
+    validate_reduce(syntax_from_bson("reduce"))
+  }
+
+  it should "read function usings from JSON" in {
+    validate_reduce_functions(syntax_from_source("reduce_functions"))
+  }
+
+  "RequireStep" should "load from JSON" in {
+    validate_require(syntax_from_source("require"))
+  }
+
+  it should "load from BsonDocument" in {
+    validate_require(syntax_from_bson("require"))
+  }
+
+  "ReviseStep" should "load from JSON" in {
+    validate_revise(syntax_from_source("revise"))
+  }
+
+  it should "load from BsonDocument" in {
+    validate_revise(syntax_from_bson("revise"))
   }
 }

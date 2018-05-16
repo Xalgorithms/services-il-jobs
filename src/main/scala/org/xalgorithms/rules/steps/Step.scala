@@ -1,5 +1,8 @@
 package org.xalgorithms.rules.steps
 
-class Step {
+import org.xalgorithms.rules._
+
+abstract class Step {
+  def execute(ctx: Context)
 }
 

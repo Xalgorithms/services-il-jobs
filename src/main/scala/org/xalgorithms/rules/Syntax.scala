@@ -1,5 +1,6 @@
 package org.xalgorithms.rules
 
+import org.bson.BsonDocument
 import play.api.libs.json._
 import play.api.libs.functional.syntax._
 import scala.io.Source
@@ -13,20 +14,20 @@ object StepProduce {
     (JsPath \ "sources").read[JsArray]
   )(produce_column _)
 
-  implicit val referenceReads: Reads[Reference] = (
+  implicit val tableReferenceReads: Reads[TableReference] = (
     (JsPath \ "section").read[String] and
     (JsPath \ "key").read[String]
-  )(produce_reference _)
+  )(produce_table_reference _)
 
   implicit val colsSourceReads: Reads[ColumnsTableSource] = (
     (JsPath \ "columns").read[JsArray] and
-    (JsPath \ "whens").read[JsArray]
+    (JsPath \ "whens").readNullable[JsArray]
   )(produce_columns_table_source _)
 
   implicit val colSourceReads: Reads[ColumnTableSource] = (
     (JsPath \ "name").read[String] and
     (JsPath \ "source").read[String] and
-    (JsPath \ "whens").read[JsArray]
+    (JsPath \ "whens").readNullable[JsArray]
   )(produce_column_table_source _)
 
   implicit val whenReads: Reads[When] = (
@@ -45,10 +46,10 @@ object StepProduce {
     (JsPath \ "source").read[JsObject]
   )(produce_assignment _)
 
-  implicit val revisionReads : Reads[Revision] = (
+  implicit val revisionReads : Reads[RevisionSource] = (
     (JsPath \ "op").read[String] and
     (JsPath \ "source").read[JsObject]
-  )(produce_revision _)
+  )(produce_revision_source _)
 
   implicit val addRevisionSourceReads : Reads[AddRevisionSource] = (
     (JsPath \ "column").read[String] and
@@ -91,20 +92,21 @@ object StepProduce {
     )
   }
 
+  def produce_optional_whens(whens_opt: Option[JsArray]): Seq[When] = whens_opt match {
+    case Some(whens) => whens.validate[Seq[When]].getOrElse(Seq())
+    case None => Seq()
+  }
+
   def produce_columns_table_source(
-    columns: JsArray, whens: JsArray): ColumnsTableSource = {
+    columns: JsArray, whens_opt: Option[JsArray]): ColumnsTableSource = {
     return new ColumnsTableSource(
       columns.validate[Seq[String]].getOrElse(Seq()),
-      whens.validate[Seq[When]].getOrElse(Seq())
-    )
+      produce_optional_whens(whens_opt))
   }
 
   def produce_column_table_source(
-    name: String, source: String, whens: JsArray): ColumnTableSource = {
-    return new ColumnTableSource(
-      name, source,
-      whens.validate[Seq[When]].getOrElse(Seq())
-    )
+    name: String, source: String, whens_opt: Option[JsArray]): ColumnTableSource = {
+    new ColumnTableSource(name, source, produce_optional_whens(whens_opt))
   }
 
   def produce_when(left: JsObject, right: JsObject, op: String): When = {
@@ -118,12 +120,9 @@ object StepProduce {
     if ("string" == vt) {
       return new StringValue(stringOrNull(content, "value"))
     } else if ("number" == vt) {
-      return new Number(doubleOrNull(content, "value"))
+      return new NumberValue(doubleOrNull(content, "value"))
     } else if ("reference" == vt) {
-      return new Reference(
-        stringOrNull(content, "section"),
-        stringOrNull(content, "key")
-      )
+      return new DocumentReferenceValue(stringOrNull(content, "section"), stringOrNull(content, "key"))
     } else if ("function" == vt) {
       return new FunctionValue(
         stringOrNull(content, "name"),
@@ -140,29 +139,18 @@ object StepProduce {
     )
   }
 
-  def produce_revision(op: String, source: JsObject): Revision = {
-    if (op == "add") {
-      return new Revision(
-        source.validate[AddRevisionSource].getOrElse(null)
-      )
-    } else if (op == "update") {
-      return new Revision(
-        source.validate[UpdateRevisionSource].getOrElse(null)
-      )
-    } else if (op == "delete") {
-      return new Revision(
-        source.validate[DeleteRevisionSource].getOrElse(null)
-      )
-    }
-
-    return null
+  def produce_revision_source(op: String, source: JsObject): RevisionSource = op match {
+    case "add" => source.validate[AddRevisionSource].getOrElse(null)
+    case "update" => source.validate[UpdateRevisionSource].getOrElse(null)
+    case "delete" => source.validate[DeleteRevisionSource].getOrElse(null)
+    case _ => null
   }
 
   def produce_add_revision_source(column: String, table: JsObject, whens: JsArray): AddRevisionSource = {
     return new AddRevisionSource(
       column,
       whens.validate[Seq[When]].getOrElse(Seq()),
-      table.validate[Reference].getOrElse(null)
+      table.validate[TableReference].getOrElse(null)
     )
   }
 
@@ -170,7 +158,7 @@ object StepProduce {
     return new UpdateRevisionSource(
       column,
       whens.validate[Seq[When]].getOrElse(Seq()),
-      table.validate[Reference].getOrElse(null)
+      table.validate[TableReference].getOrElse(null)
     )
   }
 
@@ -183,14 +171,14 @@ object StepProduce {
 
   def produce_column(table_reference: JsObject, sources: JsArray): Column = {
     return new Column(
-      table_reference.validate[Reference].getOrElse(null),
+      table_reference.validate[TableReference].getOrElse(null),
       sources.validate[Seq[ColumnsTableSource]].getOrElse(Seq()) ++
         sources.validate[Seq[ColumnTableSource]].getOrElse(Seq())
     )
   }
 
-  def produce_reference(section: String, key: String): Reference = {
-    return new Reference(section, key)
+  def produce_table_reference(section: String, key: String): TableReference = {
+    return new TableReference(section, key)
   }
 
   def produce_assemble(content: JsObject): Step = {
@@ -202,7 +190,7 @@ object StepProduce {
 
   def produce_filter(content: JsObject): Step = {
     return new FilterStep(
-      (content \ "table").validate[Reference].getOrElse(null),
+      (content \ "table").validate[TableReference].getOrElse(null),
       (content \ "filters").validate[Seq[When]].getOrElse(Seq())
     )
   }
@@ -213,7 +201,7 @@ object StepProduce {
 
   def produce_map(content: JsObject): Step = {
     return new MapStep(
-      (content \ "table").validate[Reference].getOrElse(null),
+      (content \ "table").validate[TableReference].getOrElse(null),
       (content \ "assignments").validate[Seq[Assignment]].getOrElse(Seq())
     )
   }
@@ -221,7 +209,7 @@ object StepProduce {
   def produce_reduce(content: JsObject): Step = {
     return new ReduceStep(
       (content \ "filters").validate[Seq[When]].getOrElse(Seq()),
-      (content \ "table").validate[Reference].getOrElse(null),
+      (content \ "table").validate[TableReference].getOrElse(null),
       (content \ "assignments").validate[Seq[Assignment]].getOrElse(Seq())
     )
   }
@@ -234,8 +222,8 @@ object StepProduce {
 
   def produce_revise(content: JsObject): Step = {
     return new ReviseStep(
-      (content \ "table").validate[Reference].getOrElse(null),
-      (content \ "revisions").validate[Seq[Revision]].getOrElse(Seq())
+      (content \ "table").validate[TableReference].getOrElse(null),
+      (content \ "revisions").validate[Seq[RevisionSource]].getOrElse(Seq())
     )
   }
 
@@ -254,14 +242,27 @@ object StepProduce {
   }
 }
 
-object SyntaxFromSource {
+object SyntaxFromRaw {
   implicit val stepReads: Reads[Step] = (
     (JsPath \ "name").read[String] and
     (JsPath).read[JsObject]
   )(StepProduce.apply _)
 
-  def apply(source: Source): Seq[Step] = {
-    val res = (Json.parse(source.mkString) \ "steps").validate[Seq[Step]]
+  def apply(s: String): Seq[Step] = {
+    val res = (Json.parse(s) \ "steps").validate[Seq[Step]]
     res.getOrElse(Seq())
+  }
+}
+
+object SyntaxFromSource {
+  def apply(source: Source): Seq[Step] = {
+    SyntaxFromRaw(source.mkString)
+  }
+}
+
+object SyntaxFromBson {
+  def apply(doc: BsonDocument): Seq[Step] = {
+    // cheat for now and pull out the raw json
+    SyntaxFromRaw(doc.toJson)
   }
 }
