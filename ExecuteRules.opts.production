@@ -1,1 +1,0 @@
---conf spark.cassandra.connection.host=node-0-server.cassandra.autoip.dcos.thisdcos.directory --conf spark.mongodb.input.uri=mongodb://mongodb.marathon.l4lb.thisdcos.directory:27017/xadf --conf spark.mongodb.output.uri=mongodb://mongodb.marathon.l4lb.thisdcos.directory:27017/xadf.rules --conf spark.kafka.bootstrap.servers=broker.kafka.l4lb.thisdcos.directory:9092
