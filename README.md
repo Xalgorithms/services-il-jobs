@@ -1,13 +1,8 @@
-# Licensing
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+[![Build Status](https://travis-ci.org/Xalgorithms/xadf-jobs.svg?branch=master)](https://travis-ci.org/Xalgorithms/xadf-jobs)
 
-The material in this repository is licensed under a dual license -
-[Apache 2.0](./LICENSE.AL) or [GPL 3.0](./LICENSE.GPL). This means
-that you may choose which of the licenses most suits your needs and
-requirements and use the software under the terms of the selected
-license.
+# XA Jobs
 
-
-# xadf-compute-functions
 Compute tasks
 
 Sequence of functions
