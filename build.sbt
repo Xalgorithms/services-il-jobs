@@ -22,7 +22,7 @@
 // License along with this program. If not, see
 // <http://www.gnu.org/licenses/>.
 lazy val VERSION_SCALA               = "2.11.11"
-lazy val VERSION_SPARK               = "2.2.0"
+lazy val VERSION_SPARK               = "2.3.0"
 lazy val VERSION_CASSANDRA_CONNECTOR = "2.0.3"
 lazy val VERSION_MONGO_CONNECTOR     = "2.2.0"
 lazy val VERSION_NSCALA_TIME         = "2.18.0"
@@ -45,19 +45,19 @@ lazy val depOverrides = Seq(
 )
 
 lazy val deps = Seq(
-  "com.typesafe.play"      %% "play-json"                 % VERSION_PLAY_JSON,
-  "org.apache.spark"       %% "spark-core"                % VERSION_SPARK,
-  "org.apache.spark"       %% "spark-streaming"           % VERSION_SPARK,
-  "org.apache.spark"       %% "spark-streaming-kafka-0-8" % VERSION_SPARK,
-  "org.apache.spark"       %% "spark-sql"                 % VERSION_SPARK,
-  "com.datastax.spark"     %% "spark-cassandra-connector" % VERSION_CASSANDRA_CONNECTOR,
-  "org.mongodb.spark"      %% "mongo-spark-connector"     % VERSION_MONGO_CONNECTOR,
-  "com.github.nscala-time" %% "nscala-time"               % VERSION_NSCALA_TIME,
-  "com.typesafe"           %  "config"                    % VERSION_TYPESAFE_CONFIG,
-  "net.ceedubs"            %% "ficus"                     % VERSION_FICUS,
-  "org.scalactic"          %% "scalactic"                 % VERSION_SCALA_TEST,
-  "org.scalatest"          %% "scalatest"                 % VERSION_SCALA_TEST % "test",
-  "org.scalamock"          %% "scalamock"                 % VERSION_SCALA_MOCK % "test"
+  "com.typesafe.play"      %% "play-json"                  % VERSION_PLAY_JSON,
+  "org.apache.spark"       %% "spark-core"                 % VERSION_SPARK,
+  "org.apache.spark"       %% "spark-streaming"            % VERSION_SPARK,
+  "org.apache.spark"       %% "spark-streaming-kafka-0-10" % VERSION_SPARK,
+  "org.apache.spark"       %% "spark-sql"                  % VERSION_SPARK,
+  "com.datastax.spark"     %% "spark-cassandra-connector"  % VERSION_CASSANDRA_CONNECTOR,
+  "org.mongodb.spark"      %% "mongo-spark-connector"      % VERSION_MONGO_CONNECTOR,
+  "com.github.nscala-time" %% "nscala-time"                % VERSION_NSCALA_TIME,
+  "com.typesafe"           %  "config"                     % VERSION_TYPESAFE_CONFIG,
+  "net.ceedubs"            %% "ficus"                      % VERSION_FICUS,
+  "org.scalactic"          %% "scalactic"                  % VERSION_SCALA_TEST,
+  "org.scalatest"          %% "scalatest"                  % VERSION_SCALA_TEST % "test",
+  "org.scalamock"          %% "scalamock"                  % VERSION_SCALA_MOCK % "test"
 )
 
 lazy val root = (project in file("."))

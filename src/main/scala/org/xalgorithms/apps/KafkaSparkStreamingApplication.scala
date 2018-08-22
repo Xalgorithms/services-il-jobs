@@ -28,7 +28,7 @@ import java.lang.management.ManagementFactory
 import com.mongodb.client.MongoCollection
 import com.mongodb.spark.MongoConnector
 import com.mongodb.spark.config.WriteConfig
-import kafka.serializer.StringDecoder
+import org.apache.kafka.common.serialization.StringDeserializer
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.spark.SparkConf
 import org.apache.spark.SparkContext
@@ -36,11 +36,13 @@ import org.apache.spark.broadcast.Broadcast
 import org.apache.spark.streaming.Seconds
 import org.apache.spark.streaming.StreamingContext
 import org.apache.spark.streaming.dstream.DStream
-import org.apache.spark.streaming.kafka.KafkaUtils
+import org.apache.spark.streaming.kafka010.KafkaUtils
+import org.apache.spark.streaming.kafka010.LocationStrategies.PreferConsistent
+import org.apache.spark.streaming.kafka010.ConsumerStrategies.Subscribe
 import org.bson.Document
 import scala.collection.JavaConverters._
-import scala.concurrent.duration.FiniteDuration
 
+import scala.concurrent.duration.FiniteDuration
 // The job might be run on one of the executors, hence it should be serializable
 abstract class KafkaStreamingApplication(cfg: ApplicationConfig) extends Serializable {
   type T
@@ -62,7 +64,11 @@ abstract class KafkaStreamingApplication(cfg: ApplicationConfig) extends Seriali
     val sctx = new StreamingContext(ctx, Seconds(batch_duration.toSeconds))
 
     // we have to manually copy the Kafka config
-    val kafka_cfg = Map("bootstrap.servers" -> cfg.get("spark.kafka.bootstrap.servers"))
+    val kafka_cfg = Map[String, String](
+      "bootstrap.servers" -> cfg.get("spark.kafka.bootstrap.servers"),
+      "key.deserializer" -> "org.apache.kafka.common.serialization.StringDeserializer",
+      "value.deserializer" -> "org.apache.kafka.common.serialization.StringDeserializer"
+    )
     val source = KafkaSource(kafka_cfg)
     val input = source.create(sctx, app_cfg.topic_input)
 
@@ -130,8 +136,10 @@ object ApplicationConfig {
 
 class KafkaSource(cfg: Map[String, String]) {
   def create(ctx: StreamingContext, topic: String): DStream[String] = {
-    KafkaUtils.createDirectStream[String, String, StringDecoder, StringDecoder](
-      ctx, cfg, Set(topic)).map(_._2)
+    KafkaUtils.createDirectStream[String, String](
+      ctx,
+      PreferConsistent,
+      Subscribe[String, String](Array(topic), cfg)).map(rec => rec.value)
   }
 }
 
