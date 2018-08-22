@@ -80,6 +80,8 @@ object ApplyOperator {
 }
 
 class ApplicableRules(cfg: ApplicationConfig) extends KafkaSparkStreamingApplication(cfg) {
+  implicit val job_name: String = "EffectiveRules"
+
   def execute(): Unit = {
     with_context(cfg, { (ctx, sctx, events, input) =>
       // 1. build a paired stream from the MongoDB, using "public_id" as the key:

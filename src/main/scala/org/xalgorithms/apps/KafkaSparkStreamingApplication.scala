@@ -50,6 +50,8 @@ abstract class KafkaStreamingApplication(cfg: ApplicationConfig) extends Seriali
   def batch_duration: FiniteDuration = cfg.batch_duration
   def checkpoint_dir: String = cfg.checkpoint_dir
 
+  implicit val job_name: String
+
   def with_context(app_cfg: ApplicationConfig, fn: (SparkContext, StreamingContext, Broadcast[KafkaEventLog], DStream[String]) => DStream[T]): Unit = {
     val isIDE = {
       ManagementFactory.getRuntimeMXBean.getInputArguments.toString.contains("IntelliJ IDEA")
@@ -67,7 +69,10 @@ abstract class KafkaStreamingApplication(cfg: ApplicationConfig) extends Seriali
     val kafka_cfg = Map[String, String](
       "bootstrap.servers" -> cfg.get("spark.kafka.bootstrap.servers"),
       "key.deserializer" -> "org.apache.kafka.common.serialization.StringDeserializer",
-      "value.deserializer" -> "org.apache.kafka.common.serialization.StringDeserializer"
+      "value.deserializer" -> "org.apache.kafka.common.serialization.StringDeserializer",
+      "group.id" -> s"il-spark-jobs (${job_name})",
+      "auto.offset.reset" -> "latest",
+      "enable.auto.commit" -> "false"
     )
     val source = KafkaSource(kafka_cfg)
     val input = source.create(sctx, app_cfg.topic_input)
@@ -88,7 +93,7 @@ abstract class KafkaStreamingApplication(cfg: ApplicationConfig) extends Seriali
   def act(output: DStream[T], cfg: Map[String, String], topic: String, ctx: SparkContext = null): Unit
 }
 
-class KafkaSparkStreamingApplication(cfg: ApplicationConfig) extends KafkaStreamingApplication(cfg: ApplicationConfig) {
+abstract class KafkaSparkStreamingApplication(cfg: ApplicationConfig) extends KafkaStreamingApplication(cfg: ApplicationConfig) {
   type T = String
 
   def act(output: DStream[T], cfg: Map[String, String], topic: String, ctx: SparkContext = null): Unit = {
@@ -97,7 +102,7 @@ class KafkaSparkStreamingApplication(cfg: ApplicationConfig) extends KafkaStream
   }
 }
 
-class KafkaMongoSparkStreamingApplication(cfg: ApplicationConfig) extends KafkaStreamingApplication(cfg: ApplicationConfig) {
+abstract class KafkaMongoSparkStreamingApplication(cfg: ApplicationConfig) extends KafkaStreamingApplication(cfg: ApplicationConfig) {
   type T = (String, String)
 
   def act(output: DStream[T], cfg: Map[String, String], topic: String, ctx: SparkContext): Unit = {

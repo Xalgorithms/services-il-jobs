@@ -149,6 +149,8 @@ object Effective {
 }
 
 class EffectiveRules(cfg: ApplicationConfig) extends KafkaSparkStreamingApplication(cfg) {
+  implicit val job_name: String = "EffectiveRules"
+
   def execute(): Unit = {
     with_context(cfg, { (ctx, sctx, events, input) =>
       // create a paired dstream on the effective table (K: party, V: (rule_id, Effective))
