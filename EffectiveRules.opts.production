@@ -1,1 +1,1 @@
---conf spark.cassandra.connection.host=node-0-server.cassandra.autoip.dcos.thisdcos.directory --conf spark.kafka.bootstrap.servers=broker.kafka.l4lb.thisdcos.directory:9092
+--conf spark.cassandra.connection.host=cassandra --conf spark.kafka.bootstrap.servers=kafka:9092
