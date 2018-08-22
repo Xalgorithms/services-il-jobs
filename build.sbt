@@ -35,7 +35,7 @@ lazy val VERSION_SCALA_MOCK          = "4.1.0"
 
 lazy val settings = Seq(
   name := "jobs-spark-il",
-  version := "0.1.1",
+  version := "0.1.2",
   organization := "http://xalgorithms.org",
   scalaVersion := VERSION_SCALA
 )
