@@ -1,1 +1,1 @@
---conf spark.cassandra.connection.host=cassandra --conf spark.kafka.bootstrap.servers=kafka:9092 --conf spark.mongodb.input.uri=mongodb://mongo:27017/interlibr.documents
+--conf spark.cassandra.connection.host=cassandra --conf spark.kafka.bootstrap.servers=kafka:9092 --conf spark.mongodb.input.uri=mongodb://mongo-mongodb:27017/interlibr.documents
