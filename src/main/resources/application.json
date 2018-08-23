@@ -2,8 +2,8 @@
   "EffectiveRules" : {
     "application" : {
       "topics" : {
-        "input" : "xadf.compute.documents",
-        "output" : "xadf.compute.effective"
+        "input" : "il.compute.documents",
+        "output" : "il.compute.effective"
       },
       "spark" : {
         "spark.app.name" : "jobs-xa-effective-rules"
@@ -17,8 +17,8 @@
   "ApplicableRules" : {
     "application" : {
       "topics" : {
-        "input" : "xadf.compute.effective",
-        "output" : "xadf.compute.applicable"
+        "input" : "il.compute.effective",
+        "output" : "il.compute.applicable"
       },
       "spark" : {
         "spark.app.name" : "jobs-xa-applicable-rules"
@@ -32,8 +32,8 @@
   "ExecuteRules" : {
     "application" : {
       "topics" : {
-        "input" : "xadf.compute.applicable",
-        "output" : "xadf.compute.revision"
+        "input" : "il.compute.applicable",
+        "output" : "il.compute.revision"
       },
       "spark" : {
         "spark.app.name" : "jobs-xa-execute-rules"
