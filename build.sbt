@@ -24,6 +24,7 @@
 lazy val VERSION_SCALA               = "2.11.11"
 lazy val VERSION_SPARK               = "2.3.0"
 lazy val VERSION_CASSANDRA_CONNECTOR = "2.0.3"
+// NOTE: Upgrade (don't forget deployment scripts)
 lazy val VERSION_MONGO_CONNECTOR     = "2.2.0"
 lazy val VERSION_NSCALA_TIME         = "2.18.0"
 lazy val VERSION_TYPESAFE_CONFIG     = "1.2.1"
