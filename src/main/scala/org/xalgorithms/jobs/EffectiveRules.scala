@@ -192,8 +192,18 @@ class EffectiveRules(cfg: ApplicationConfig) extends KafkaSparkStreamingApplicat
 }
 
 object EffectiveRules {
-  def main(args: Array[String]) : Unit = {
-    val job = new EffectiveRules(ApplicationConfig("EffectiveRules"))
+  def execute_job(name: String): Unit = {
+    val job = new EffectiveRules(ApplicationConfig(name))
     job.execute()
+  }
+
+  def main(args: Array[String]) : Unit = {
+    execute_job("EffectiveRules")
+  }
+}
+
+object ValidateEffectiveRules {
+  def main(args: Array[String]) : Unit = {
+    EffectiveRules.execute_job("ValidateEffectiveRules")
   }
 }

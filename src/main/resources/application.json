@@ -17,6 +17,24 @@
     "job" : {
     }
   },
+  "ValidateEffectiveRules" : {
+    "application" : {
+      "topics" : {
+        "input" : "il.verify.effective",
+        "output" : "il.emit.verification"
+      },
+      "spark" : {
+        "spark.app.name" : "jobs-il-validate-effective-rules"
+      },
+      "cassandra" : {
+        "keyspace" : "interlibr"
+      },
+      "batch_duration" : "5s",
+      "checkpoint_dir" : "./streaming-checkpoints"
+    },
+    "job" : {
+    }
+  },
   "ApplicableRules" : {
     "application" : {
       "topics" : {
