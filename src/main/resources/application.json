@@ -6,7 +6,7 @@
         "output" : "il.compute.effective"
       },
       "spark" : {
-        "spark.app.name" : "jobs-xa-effective-rules"
+        "spark.app.name" : "jobs-il-effective-rules"
       },
       "batch_duration" : "5s",
       "checkpoint_dir" : "./streaming-checkpoints"
@@ -21,22 +21,7 @@
         "output" : "il.compute.applicable"
       },
       "spark" : {
-        "spark.app.name" : "jobs-xa-applicable-rules"
-      },
-      "batch_duration" : "5s",
-      "checkpoint_dir" : "./streaming-checkpoints"
-    },
-    "job" : {
-    }
-  },
-  "ExecuteRules" : {
-    "application" : {
-      "topics" : {
-        "input" : "il.compute.applicable",
-        "output" : "il.compute.revision"
-      },
-      "spark" : {
-        "spark.app.name" : "jobs-xa-execute-rules"
+        "spark.app.name" : "jobs-il-applicable-rules"
       },
       "batch_duration" : "5s",
       "checkpoint_dir" : "./streaming-checkpoints"
