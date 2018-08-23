@@ -156,13 +156,13 @@ class EffectiveRules(cfg: ApplicationConfig) extends KafkaSparkStreamingApplicat
       // create a paired dstream on the effective table (K: party, V: (rule_id, Effective))
       events.value.info("starting")
       val effective_paired_stream = new ConstantInputDStream(
-        sctx, sctx.cassandraTable("xadf", "effective")
+        sctx, sctx.cassandraTable(cfg.cassandra_keyspace, "effective")
       ).map { cr => cr.getString("party") -> Tuple2(cr.getString("rule_id"), Effective(cr)) }
 
       // create a paired dstream on the documents table (K: party, V: (document_id, Envelope)
       // where the document_id == the input document_id
       val document_paired_stream = input.map(Tuple1(_))
-        .joinWithCassandraTable("xadf", "envelopes", AllColumns, SomeColumns("document_id"))
+        .joinWithCassandraTable(cfg.cassandra_keyspace, "envelopes", AllColumns, SomeColumns("document_id"))
         .map { tup =>
           val party = tup._2.getString("party")
           val document_id = tup._2.getString("document_id")

@@ -116,6 +116,7 @@ import com.typesafe.config.Config
 case class ApplicationConfig(
   topic_input: String,
   topic_output: String,
+  cassandra_keyspace: String,
   batch_duration: FiniteDuration,
   checkpoint_dir: String,
   job: Config
@@ -132,6 +133,7 @@ object ApplicationConfig {
     new ApplicationConfig(
       app_cfg.as[String]("topics.input"),
       app_cfg.as[String]("topics.output"),
+      app_cfg.as[String]("cassandra.keyspace"),
       app_cfg.as[FiniteDuration]("batch_duration"),
       app_cfg.as[String]("checkpoint_dir"),
       all_cfg.getConfig(s"$name.job")

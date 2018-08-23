@@ -103,7 +103,7 @@ class ApplicableRules(cfg: ApplicationConfig) extends KafkaSparkStreamingApplica
       // Rows are stored in this table when there are actual rules that
       // have XALGO/WHEN expressions referencing the keys in the rows
       val when_keys_stream = new ConstantInputDStream(
-        sctx, sctx.cassandraTable("xadf", "when_keys")
+        sctx, sctx.cassandraTable(cfg.cassandra_keyspace, "when_keys")
       )
       // => ((section), (key))
 
@@ -138,7 +138,7 @@ class ApplicableRules(cfg: ApplicationConfig) extends KafkaSparkStreamingApplica
       // "{section}:{key}". The comparision is retained as an
       // ApplyOperator instance.
       val whens_stream = new ConstantInputDStream(
-        sctx, sctx.cassandraTable("xadf", "whens")
+        sctx, sctx.cassandraTable(cfg.cassandra_keyspace, "whens")
       ).map { cr =>
         val section = cr.getString("section")
         val key = cr.getString("key")

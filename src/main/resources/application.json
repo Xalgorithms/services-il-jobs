@@ -8,6 +8,9 @@
       "spark" : {
         "spark.app.name" : "jobs-il-effective-rules"
       },
+      "cassandra" : {
+        "keyspace" : "interlibr"
+      },
       "batch_duration" : "5s",
       "checkpoint_dir" : "./streaming-checkpoints"
     },
@@ -22,6 +25,9 @@
       },
       "spark" : {
         "spark.app.name" : "jobs-il-applicable-rules"
+      },
+      "cassandra" : {
+        "keyspace" : "interlibr"
       },
       "batch_duration" : "5s",
       "checkpoint_dir" : "./streaming-checkpoints"
