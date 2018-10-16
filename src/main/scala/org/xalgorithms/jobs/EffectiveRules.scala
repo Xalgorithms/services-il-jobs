@@ -27,33 +27,28 @@ import org.apache.spark.streaming.dstream._
 import com.datastax.spark.connector._
 import com.datastax.spark.connector.streaming._
 import org.joda.time.{ DateTime, DateTimeZone }
+import play.api.libs.json._
+import play.api.libs.functional.syntax._
 
 import org.xalgorithms.apps._
 
-class Envelope(
-  val country: Option[String], val region: Option[String],
-  val timezone: Option[String], val issued: Option[DateTime]) extends Serializable {
-
-  def asString(): String = {
-    Map(
-      "country" -> country, "region" -> region,
-      "timezone" -> timezone, "issued" -> issued).foldLeft(Seq[String]()) { case (seq, (k, v)) =>
-        if (v.nonEmpty) {
-          seq :+ s"${k}=${v.get}"
-        } else {
-          seq
-        }
-    }.mkString("; ")
+case class DocumentEffectiveContext(val opt_doc_id: Option[String], opt_effective_ctx: Option[JsObject]) {
+  def opt_key = opt_effective_ctx.flatMap { ec => (ec \ "key").asOpt[String] }
+  def opt_country = opt_effective_ctx.flatMap { ec => (ec \ "country").asOpt[String] }
+  def opt_region = opt_effective_ctx.flatMap { ec => (ec \ "region").asOpt[String] }
+  def opt_timezone = opt_effective_ctx.flatMap { ec => (ec \ "timezone").asOpt[String] }
+  def opt_issued = opt_effective_ctx.flatMap { ec =>
+    (ec \ "issued").asOpt[String].map(new DateTime(_))
   }
-}
 
-object Envelope {
-  def apply(cr: CassandraRow): Envelope = {
-    new Envelope(
-      cr.getStringOption("country"),
-      cr.getStringOption("region"),
-      cr.getStringOption("timezone"),
-      cr.getDateTimeOption("issued"))
+  def asString: String = {
+    val doc_id = opt_doc_id.getOrElse("-")
+    val key = opt_key.getOrElse("-")
+    val country = opt_country.getOrElse("-")
+    val region = opt_region.getOrElse("-")
+    val timezone = opt_timezone.getOrElse("-")
+    val issued = opt_issued.getOrElse(null)
+    s"doc_id=${doc_id}; key=${key}; country=${country}; region=${region}; timezone=${timezone}; issued=${issued}"
   }
 }
 
@@ -73,9 +68,9 @@ class Effective(
     }.mkString("; ")
   }
 
-  def matches(e: Envelope): Boolean = {
-    is_global_or_matching_jurisdication(e.country, e.region) &&
-      is_within_effective_period(e.issued, e.timezone);
+  def matches(eff_ctx: DocumentEffectiveContext): Boolean = {
+    is_global_or_matching_jurisdication(eff_ctx.opt_country, eff_ctx.opt_region) &&
+    is_within_effective_period(eff_ctx.opt_issued, eff_ctx.opt_timezone);
   }
 
   def is_global_or_matching_jurisdication(
@@ -153,39 +148,64 @@ class EffectiveRules(cfg: ApplicationConfig) extends KafkaSparkStreamingApplicat
 
   def execute(): Unit = {
     with_context(cfg, { (ctx, sctx, events, input) =>
+      // builds a paired dstream from an input of JSON off of kafka
+      // IN: { key, document_id, ... }
+      // OUT: (key -> (document_id, DocumentEffectiveContext)
+      val doc_ps = input.map { s => Json.parse(s) }.map { o =>
+        events.value.info("extracting JSON", Map("o" -> o.toString))
+        (o \ "args").asOpt[JsObject].map { args =>
+          DocumentEffectiveContext(
+            (args \ "document_id").asOpt[String],
+            (args \ "effective_context").asOpt[JsObject]
+          )
+        }
+      }.map { opt_doc_eff_ctx =>
+        opt_doc_eff_ctx match {
+          case Some(doc_eff_ctx) => {
+            events.value.info("forming pair with valid context", Map("effective_ctx" -> doc_eff_ctx.asString))
+            val key = doc_eff_ctx.opt_key.getOrElse("")
+            val doc_id = doc_eff_ctx.opt_doc_id.getOrElse("")
+            key -> Tuple2(doc_id, Some(doc_eff_ctx))
+          }
+
+          case None => "" -> Tuple2("", None)
+        }
+      }
+
       // create a paired dstream on the effective table (K: party, V: (rule_id, Effective))
       events.value.info("starting")
-      val effective_paired_stream = new ConstantInputDStream(
+      val effective_ps = new ConstantInputDStream(
         sctx, sctx.cassandraTable(cfg.cassandra_keyspace, "effective")
-      ).map { cr => cr.getString("party") -> Tuple2(cr.getString("rule_id"), Effective(cr)) }
-
-      // create a paired dstream on the documents table (K: party, V: (document_id, Envelope)
-      // where the document_id == the input document_id
-      val document_paired_stream = input.map(Tuple1(_))
-        .joinWithCassandraTable(cfg.cassandra_keyspace, "envelopes", AllColumns, SomeColumns("document_id"))
-        .map { tup =>
-          val party = tup._2.getString("party")
-          val document_id = tup._2.getString("document_id")
-          val e = Envelope(tup._2)
-          events.value.info("mapping input document party to Envelope", Map("party" -> party, "document_id" -> document_id, "envelope" -> e.asString()))
-          party -> Tuple2(document_id, e)
-        }
+      ).map {
+        cr => cr.getString("key") -> Tuple2(cr.getString("rule_id"), Effective(cr))
+      }
 
       // join the two streams to create (K: party, (Envelope, Effective))
       // similar to inner join on party==party from the two tables
-      document_paired_stream.join(effective_paired_stream)
+      doc_ps.join(effective_ps)
         // just keep the values
         .map(_._2)
         // filter with Effective.matches
         .filter { tup =>
-          val matches = tup._2._2.matches(tup._1._2)
-          events.value.info("matching envelope to effective", Map("matches" -> matches.toString, "envelope" -> tup._2._2.asString, "effective" -> tup._1._2.asString))
-          matches
+          tup._1._2 match {
+            case Some(eff_ctx) => {
+              val matches = tup._2._2.matches(eff_ctx)
+              events.value.info("matching envelope to effective", Map("matches" -> matches.toString, "envelope" -> tup._2._2.asString, "effective" -> eff_ctx.asString))
+              matches
+            }
+            case None => {
+              events.value.info("no effective context to match")
+              false
+            }
+          }
         }
         // build the result (document_id:rule_id)
         .map { tup =>
           events.value.gave("delivering", Map("document_id" -> tup._1._1, "rule_id" -> tup._2._1))
-          tup._1._1 + ":" + tup._2._1
+          Json.obj(
+            "context" -> Map("task" -> "compute", "action" -> "effective"),
+            "args" -> Map("document_id" -> tup._1._1, "rule_id" -> tup._2._1)
+          ).toString
         }
     })
   }
