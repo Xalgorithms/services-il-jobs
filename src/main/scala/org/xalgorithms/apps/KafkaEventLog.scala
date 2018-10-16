@@ -52,7 +52,12 @@ class KafkaEventLog(producer_fn: () => KafkaProducer[String, String]) extends Se
   }
 
   def send(level: String, m: String, props: Map[String, String] = Map()) {
-    producer.send(new ProducerRecord("xadf.log.events", Json.toJson(props ++ Map("level" -> level, "message" -> m)).toString))
+    val o = Json.obj(
+      "level" -> level,
+      "message" -> m,
+      "props" -> props
+    )
+    producer.send(new ProducerRecord("il.audit.compute", o.toString))
   }
 }
 
