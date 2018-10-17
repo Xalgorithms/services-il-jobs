@@ -52,5 +52,23 @@
     },
     "job" : {
     }
+  },
+  "ValidateApplicableRules" : {
+    "application" : {
+      "topics" : {
+        "input" : "il.verify.applicable",
+        "output" : "il.emit.verification"
+      },
+      "spark" : {
+        "spark.app.name" : "jobs-il-applicable-rules"
+      },
+      "cassandra" : {
+        "keyspace" : "interlibr"
+      },
+      "batch_duration" : "5s",
+      "checkpoint_dir" : "./streaming-checkpoints"
+    },
+    "job" : {
+    }
   }
 }
