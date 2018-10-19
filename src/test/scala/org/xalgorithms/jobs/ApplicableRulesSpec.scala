@@ -31,9 +31,11 @@ import org.scalatest._
 class ApplicableRuleSpec extends FlatSpec with Matchers {
   "DocumentValues" should "extract values from the envelope section" in {
     val JSON = """{
-      "envelope" : {
-        "a" : 1,
-        "b" : { "ba" : 2, "bb" : "3" }
+      "content" : {
+        "envelope" : {
+          "a" : 1,
+          "b" : { "ba" : 2, "bb" : "3" }
+        }
       }
     }"""
 
@@ -63,13 +65,15 @@ class ApplicableRuleSpec extends FlatSpec with Matchers {
 
   it should "extract values from the documents in the items section" in {
     val JSON = """{
-      "items" : [
-        { "a": "00", "b": "01", "c": "02" },
-        "",
-        { "a": "10", "c": "12" },
-        { "b": "21", c: "22" },
-        [0, 1, 2]
-      ]
+      "content" : {
+        "items" : [
+          { "a": "00", "b": "01", "c": "02" },
+          "",
+          { "a": "10", "c": "12" },
+          { "b": "21", c: "22" },
+          [0, 1, 2]
+        ]
+      }
     }"""
 
     val exs = Map(
