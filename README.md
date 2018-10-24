@@ -2,7 +2,7 @@
 [![Build Status](https://travis-ci.org/Xalgorithms/services-il-jobs.svg?branch=master)](https://travis-ci.org/Xalgorithms/services-il-jobs)
 
 This is a collection of Spark jobs that implement the [document
-pipeline](https://github.com/Xalgorithms/interlibr/blob/master/docs/pipeline.md). The
+pipeline](https://github.com/Xalgorithms/general-documentation/blob/master/pipeline.md). The
 rules use Cassandra, Kafka streams and MongoDB as sources of information. Rule
 output is written to several different Kafka topics.
 
